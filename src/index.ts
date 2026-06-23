@@ -206,7 +206,23 @@ async function saveAndEmitMessage(
 }
 
 const expressApp = express();
-expressApp.use(cors({ origin: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000", credentials: true }));
+
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  process.env.NEXT_PUBLIC_APP_URL,
+  "http://localhost:3000"
+].filter(Boolean) as string[];
+
+expressApp.use(cors({ 
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
+      callback(null, true);
+    } else {
+      callback(null, origin); // Mirror origin for dynamic frontend deployments (e.g., Vercel previews)
+    }
+  }, 
+  credentials: true 
+}));
 expressApp.use(express.json());
 expressApp.use(cookieParser());
 
@@ -306,7 +322,14 @@ const server = createServer(expressApp);
 const io = new Server(server, {
   path: "/socket.io",
   cors: {
-    origin: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
+        callback(null, true);
+      } else {
+        callback(null, origin);
+      }
+    },
+    credentials: true,
     methods: ["GET", "POST"]
   }
 });
