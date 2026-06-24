@@ -45,7 +45,7 @@ type ActiveRoom = {
 };
 
 const dev = process.env.NODE_ENV !== "production";
-const hostname = process.env.HOSTNAME || "0.0.0.0";
+const hostname = "0.0.0.0";
 const port = Number(process.env.PORT || 5000);
 
 // Supabase Init (For Magic Links Only - optional, not required for Google auth)

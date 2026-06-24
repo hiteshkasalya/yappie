@@ -17,15 +17,15 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.9.2",
     "socket.io": "^4.8.1",
-    "tsx": "^4.19.2"
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^22.10.2",
-    "typescript": "^5.7.2"
+    "@types/node": "^22.10.2"
   },
   "engines": {
     "node": ">=20.0.0"
