@@ -6,7 +6,7 @@ import { createClient } from "@supabase/supabase-js";
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
 
-import crypto from "node:crypto";
+import crypto from "crypto";
 import { Server, Socket } from "socket.io";
 import { createPairKey } from "./lib/pairKey";
 import { cleanMessage, isMessageTooLong, isTextOnlyPayload } from "./lib/safety";
