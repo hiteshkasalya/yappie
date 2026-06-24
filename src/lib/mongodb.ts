@@ -15,33 +15,26 @@ globalForMongoose.mongooseCache = cache;
 export async function connectToDatabase() {
   const uri = process.env.MONGODB_URI;
 
+  if (!uri) {
+    throw new Error("[Database] MONGODB_URI environment variable is not set!");
+  }
+
   if (cache.conn) {
     return cache.conn;
   }
 
   if (!cache.promise) {
-    const localUri = "mongodb://127.0.0.1:27017/yappie";
-    const primaryUri = uri || localUri;
+    console.log(`[Database] Attempting connection to MongoDB Atlas...`);
 
-    console.log(`[Database] Attempting connection to primary MongoDB URI...`);
-
-    cache.promise = mongoose.connect(primaryUri, {
+    cache.promise = mongoose.connect(uri, {
       bufferCommands: false,
       maxPoolSize: 10,
-      serverSelectionTimeoutMS: 4000 // 4 seconds timeout
-    }).catch(async (err) => {
-      console.warn(`[Database] ⚠️ Primary database connection failed: ${err.message || err}`);
-      if (primaryUri !== localUri) {
-        console.log(`[Database] 🔄 Falling back to local MongoDB: ${localUri}`);
-        return mongoose.connect(localUri, {
-          bufferCommands: false,
-          maxPoolSize: 10
-        });
-      }
-      throw err;
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
     });
   }
 
   cache.conn = await cache.promise;
   return cache.conn;
 }
+

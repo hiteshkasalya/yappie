@@ -48,10 +48,18 @@ const dev = process.env.NODE_ENV !== "production";
 const hostname = process.env.HOSTNAME || "0.0.0.0";
 const port = Number(process.env.PORT || 5000);
 
-// Supabase Init (For Magic Links Only)
-const supabaseUrl = process.env.SUPABASE_URL || "https://your-project.supabase.co";
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || "your-anon-key";
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Supabase Init (For Magic Links Only - optional, not required for Google auth)
+const supabaseUrl = process.env.SUPABASE_URL || "";
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || "";
+let supabase: ReturnType<typeof createClient> | null = null;
+try {
+  if (supabaseUrl && supabaseAnonKey && !supabaseUrl.includes("your-project")) {
+    supabase = createClient(supabaseUrl, supabaseAnonKey);
+  }
+} catch (e) {
+  console.warn("[Supabase] Could not initialize client, Supabase features disabled.");
+}
+
 
 const JWT_SECRET = process.env.JWT_SECRET || process.env.SUPABASE_JWT_SECRET || "super_secret_jwt_key_for_yappie";
 
@@ -277,8 +285,10 @@ expressApp.post('/api/auth/session', async (req, res) => {
     if (!access_token) return res.status(400).json({ error: 'Missing token' });
 
     // 1. Securely verify token with Supabase server client
+    if (!supabase) return res.status(503).json({ error: 'Supabase not configured' });
     const { data: { user: sbUser }, error } = await supabase.auth.getUser(access_token);
     if (error || !sbUser) throw error || new Error("Invalid session token");
+
 
     // 2. Link or create the MongoDB anonymous record
     let user = await User.findOne({ email: sbUser.email });
