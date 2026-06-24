@@ -5,7 +5,7 @@ import cors from "cors";
 import { createClient } from "@supabase/supabase-js";
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
-import { nanoid } from "nanoid";
+
 import crypto from "node:crypto";
 import { Server, Socket } from "socket.io";
 import { createPairKey } from "./lib/pairKey";
@@ -173,7 +173,7 @@ async function saveAndEmitMessage(
   }
 
   const message = cleanMessage(rawMessage);
-  let savedMessageId = nanoid(12);
+  let savedMessageId = crypto.randomBytes(6).toString("hex");
   let timestamp = new Date().toISOString();
 
   if (chatType === "friend") {
