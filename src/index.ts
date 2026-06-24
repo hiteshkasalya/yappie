@@ -61,7 +61,7 @@ try {
 }
 
 
-const JWT_SECRET = process.env.JWT_SECRET || process.env.SUPABASE_JWT_SECRET || "super_secret_jwt_key_for_yappie";
+const JWT_SECRET = "super_secret_jwt_key_for_yappie";
 
 const waitingRandom = new Set<WaitingUser>();
 const waitingCampus = new Map<string, Set<WaitingUser>>();
