@@ -240,6 +240,16 @@ connectToDatabase().catch(console.error);
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || "558841127533-v0gpcqrn1f45ru62rknkm79fk73odoa9.apps.googleusercontent.com");
 
 // Route: Verify Direct Google SDK Token
+expressApp.get('/api/public/db-info', (req, res) => {
+  const uri = process.env.MONGODB_URI || "";
+  const maskedUri = uri.replace(/:([^@]+)@/, ":xxxx@");
+  res.json({
+    hasUri: !!uri,
+    uri: maskedUri,
+    nodeEnv: process.env.NODE_ENV
+  });
+});
+
 expressApp.post('/api/auth/google', async (req, res) => {
   try {
     const { token: idToken } = req.body;
