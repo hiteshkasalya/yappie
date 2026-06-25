@@ -1,0 +1,2021 @@
+/* ================================================================
+   YAPPIE — PURE BLACK & WHITE  /  PREMIUM MONOCHROME
+
+   Philosophy: no color. Ever.
+   Hierarchy through: lightness, weight, spacing, opacity.
+   Depth through:     surface steps, not shadows.
+   Character through: typography, subtle borders, motion.
+
+   SURFACE STACK
+   ─────────────
+   #0C0C0E  ← base background  (very slightly blue-tinted black)
+   #161618  ← surface 1        (cards, panels)
+   #1E1E21  ← surface 2        (hover, tabs active)
+   #272729  ← surface 3        (pressed, deep hover)
+
+   TEXT
+   ────
+   #F2F2F4  primary   — warm off-white (not pure white)
+   #717178  secondary — mid grey
+   #3D3D44  muted     — least important
+
+   BORDERS
+   ───────
+   rgba(255,255,255,0.07)  standard
+   rgba(255,255,255,0.13)  strong / hover
+
+   ONLY "COLOR": white
+   Used as the accent itself — clean, Swiss-design energy.
+================================================================ */
+
+/* ---------- TOKENS ---------- */
+.yappie-app {
+  --bg: #000000;
+  --surface-1: #0A0A0A;
+  --surface-2: #141414;
+  --surface-3: #1F1F1F;
+
+  --border:    rgba(255, 255, 255, 0.07);
+  --border-hi: rgba(255, 255, 255, 0.13);
+  --border-wh: rgba(255, 255, 255, 0.22);
+
+  --text-1: #FFFFFF;
+  --text-2: #A1A1AA;
+  --text-3: #3D3D44;
+
+  color:      var(--text-1);
+  background: var(--bg);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.yappie-loading {
+  min-height: 100dvh;
+  background: var(--bg);
+}
+
+/* ================================================================
+   BACKGROUND — floating bubble animation
+   Bubbles are translucent white circles of varying sizes
+   that drift upward slowly, with staggered timing.
+   Result: a living, breathing backdrop. Subtle. Premium.
+================================================================ */
+.yappie-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* Very faint grain texture — adds physicality to the bg */
+.yappie-bg-aurora {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+}
+
+.yappie-bg-noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  mix-blend-mode: overlay;
+}
+
+/* Bubbles container */
+.yappie-bg-bubbles {
+  position: absolute;
+  inset: 0;
+}
+
+/* Base bubble styles — sizes & positions set inline in AppShell */
+.yappie-bg-bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  /* Each bubble drifts upward and fades */
+  animation: bubble-rise linear infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes bubble-rise {
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-110vh) translateX(var(--drift, 20px)) scale(1.08);
+    opacity: 0;
+  }
+}
+
+/* Individual bubble sizes & positions via nth-child */
+.yappie-bg-bubble:nth-child(1)  { width: 8px;  height: 8px;  left: 12%;  bottom: -8px;  animation-duration: 14s; animation-delay: 0s;    --drift:  15px; }
+.yappie-bg-bubble:nth-child(2)  { width: 14px; height: 14px; left: 27%;  bottom: -14px; animation-duration: 18s; animation-delay: 2s;    --drift: -20px; }
+.yappie-bg-bubble:nth-child(3)  { width: 6px;  height: 6px;  left: 42%;  bottom: -6px;  animation-duration: 12s; animation-delay: 4s;    --drift:  10px; }
+.yappie-bg-bubble:nth-child(4)  { width: 20px; height: 20px; left: 58%;  bottom: -20px; animation-duration: 22s; animation-delay: 1s;    --drift: -25px; }
+.yappie-bg-bubble:nth-child(5)  { width: 10px; height: 10px; left: 73%;  bottom: -10px; animation-duration: 16s; animation-delay: 6s;    --drift:  18px; }
+.yappie-bg-bubble:nth-child(6)  { width: 5px;  height: 5px;  left: 85%;  bottom: -5px;  animation-duration: 11s; animation-delay: 3s;    --drift: -12px; }
+.yappie-bg-bubble:nth-child(7)  { width: 18px; height: 18px; left: 5%;   bottom: -18px; animation-duration: 20s; animation-delay: 8s;    --drift:  22px; }
+.yappie-bg-bubble:nth-child(8)  { width: 9px;  height: 9px;  left: 35%;  bottom: -9px;  animation-duration: 15s; animation-delay: 5s;    --drift: -15px; }
+.yappie-bg-bubble:nth-child(9)  { width: 12px; height: 12px; left: 65%;  bottom: -12px; animation-duration: 17s; animation-delay: 9s;    --drift:  14px; }
+.yappie-bg-bubble:nth-child(10) { width: 7px;  height: 7px;  left: 90%;  bottom: -7px;  animation-duration: 13s; animation-delay: 7s;    --drift: -10px; }
+.yappie-bg-bubble:nth-child(11) { width: 24px; height: 24px; left: 50%;  bottom: -24px; animation-duration: 25s; animation-delay: 0.5s;  --drift:  30px; border-color: rgba(255,255,255,0.05); }
+.yappie-bg-bubble:nth-child(12) { width: 4px;  height: 4px;  left: 20%;  bottom: -4px;  animation-duration: 10s; animation-delay: 11s;   --drift: -8px; }
+
+/* Decorative line hidden — bubbles stay visible */
+.yappie-bg-line { display: none; }
+
+/* ================================================================
+   HEADER
+================================================================ */
+.yappie-header {
+  flex-shrink: 0;
+  padding: max(1.125rem, env(safe-area-inset-top)) 1.25rem 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .yappie-header { padding-left: 2rem; padding-right: 2rem; }
+}
+
+.yappie-header-inner {
+  max-width: 28rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (min-width: 1024px) {
+  .yappie-header-inner { max-width: 32rem; }
+}
+
+/* ================================================================
+   BRAND
+================================================================ */
+.yappie-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+/* Logo mark — pure white on black, clean square */
+.yappie-brand-mark {
+  display: flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.625rem;
+  background: var(--text-1);
+  /* The icon inside should be dark — handled in TSX */
+}
+
+.yappie-brand-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-transform: lowercase;
+  color: var(--text-1);
+}
+
+/* Dot is white — same as text. No color accent. */
+.yappie-brand-dot {
+  color: var(--text-1);
+  opacity: 0.45;
+}
+
+/* ================================================================
+   TABS
+================================================================ */
+.yappie-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+  padding: 0.3rem;
+  border-radius: 0.875rem;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+}
+
+.yappie-tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.625rem 1rem;
+  border-radius: 0.625rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-2);
+  letter-spacing: 0.01em;
+  transition: color 0.18s, background 0.18s;
+}
+
+.yappie-tab:hover:not(.yappie-tab-on) {
+  color: var(--text-1);
+  background: var(--surface-2);
+}
+
+/* Active: white text, slight surface lift, clean border */
+.yappie-tab-on {
+  background: var(--surface-2);
+  color: var(--text-1);
+  font-weight: 600;
+  border: 1px solid var(--border-hi);
+}
+
+.yappie-tab-badge {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.4rem;
+  min-width: 1rem;
+  height: 1rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: var(--text-1);
+  font-size: 0.5rem;
+  font-weight: 800;
+  color: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ================================================================
+   MAIN
+================================================================ */
+.yappie-main {
+  flex: 1;
+  min-height: 0;
+  max-width: 28rem;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 1.25rem max(1.5rem, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+}
+
+.yappie-main-scroll {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (min-width: 640px) {
+  .yappie-main { padding-left: 2rem; padding-right: 2rem; }
+}
+
+@media (min-width: 1024px) {
+  .yappie-main { max-width: 32rem; justify-content: center; }
+}
+
+/* ================================================================
+   HERO SECTION
+================================================================ */
+@keyframes yappie-fade-in-up {
+  from { opacity: 0; transform: translateY(20px); filter: blur(4px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+.yappie-hero {
+  margin-top: 2.25rem;
+  margin-bottom: 2.5rem;
+  animation: yappie-fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.yappie-eyebrow {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 0.75rem;
+  background: linear-gradient(90deg, var(--text-2), var(--text-3));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.yappie-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  color: var(--text-1);
+  text-shadow: 0 0 40px rgba(255,255,255,0.15);
+}
+
+@media (min-width: 640px) {
+  .yappie-title { font-size: 2.125rem; }
+}
+
+/* Username — full white, bold. Stands out by weight alone. */
+.yappie-title-accent {
+  color: var(--text-1);
+  font-weight: 800;
+  display: inline-block;
+  background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 12px rgba(255,255,255,0.2));
+}
+
+.yappie-subtitle {
+  margin-top: 0.75rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--text-2);
+  max-width: 90%;
+}
+
+/* ================================================================
+   CARDS
+================================================================ */
+.yappie-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.yappie-card {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  border: 1px solid var(--border);
+  background: linear-gradient(145deg, var(--surface-1), var(--bg));
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.02);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: yappie-fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.yappie-card:nth-child(1) { animation-delay: 0.1s; }
+.yappie-card:nth-child(2) { animation-delay: 0.2s; }
+
+.yappie-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(800px circle at 50% 50%, rgba(255,255,255,0.04), transparent 40%);
+  opacity: 0;
+  transition: opacity 0.4s;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Hover: one step up the surface stack */
+.yappie-card:hover {
+  background: linear-gradient(145deg, var(--surface-2), var(--surface-1));
+  border-color: rgba(255,255,255,0.25);
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 40px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.yappie-card:hover::after {
+  opacity: 1;
+}
+
+.yappie-card:active {
+  transform: scale(0.985);
+  background: var(--surface-1);
+}
+
+/* Left accent stripe — white for campus, dimmer white for global.
+   No color. Just contrast. */
+.yappie-card-accent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.8), rgba(255,255,255,0));
+  opacity: 0.5;
+  transition: opacity 0.4s;
+}
+.yappie-card:hover .yappie-card-accent {
+  opacity: 1;
+  box-shadow: 2px 0 12px rgba(255,255,255,0.3);
+}
+
+/* Global card stripe is slightly dimmer to create difference */
+.yappie-card-accent-global {
+  background: linear-gradient(180deg, rgba(255,255,255,0.4), rgba(255,255,255,0));
+}
+
+/* Card body — no icon, wider text area */
+.yappie-card-body {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.5rem 1.5rem 1.5rem 1.75rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* ----------------------------------------------------------------
+   No icon elements in this design — removed from TSX
+---------------------------------------------------------------- */
+.yappie-card-icon         { display: none; }
+.yappie-card-icon-campus  { display: none; }
+.yappie-card-icon-global  { display: none; }
+
+.yappie-card-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.yappie-card-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--text-1);
+  line-height: 1.1;
+  transition: transform 0.3s;
+}
+.yappie-card:hover .yappie-card-title {
+  transform: translateX(4px);
+}
+
+/* Tag — uppercase, reduced weight, muted. No color. */
+.yappie-card-tag {
+  margin-top: 0.25rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+
+/* Both cards same tag color — monochrome */
+.yappie-card-campus .yappie-card-tag,
+.yappie-card-global  .yappie-card-tag {
+  color: var(--text-2);
+}
+
+.yappie-card-desc {
+  margin-top: 0.35rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+/* Arrow circle — monochrome */
+.yappie-card-arrow {
+  display: flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border-hi);
+  color: var(--text-1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(10px);
+}
+.yappie-card:hover .yappie-card-arrow {
+  background: var(--text-1);
+  border-color: var(--text-1);
+  color: var(--bg);
+  transform: translateX(4px) scale(1.05);
+  box-shadow: 0 0 20px rgba(255,255,255,0.2);
+}
+
+.yappie-card:hover .yappie-card-arrow {
+  background: var(--text-1);
+  border-color: var(--text-1);
+  color: var(--bg);
+}
+
+/* Both arrows same style */
+.yappie-card-arrow-global {
+  color: var(--text-1);
+}
+
+/* ================================================================
+   FOOTER NOTE
+================================================================ */
+.yappie-footer-note {
+  margin-top: 2rem;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.5625rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+}
+
+.yappie-footer-note::before,
+.yappie-footer-note::after {
+  content: '';
+  display: block;
+  width: 2.5rem;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ================================================================
+   PROFILE PAGE
+================================================================ */
+.yappie-profile {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding-top: 1rem;
+}
+
+.yappie-profile-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.yappie-avatar {
+  display: flex;
+  height: 5rem;
+  width: 5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--bg);
+  background: var(--text-1);
+  margin-bottom: 1rem;
+  border: 2px solid var(--border-hi);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.04);
+}
+
+.yappie-profile-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-1);
+}
+
+.yappie-profile-meta {
+  margin-top: 0.3rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--text-2);
+}
+
+/* ================================================================
+   LIST ROWS
+================================================================ */
+.yappie-profile-list {
+  border-radius: 1.125rem;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  overflow: hidden;
+}
+
+.yappie-list-row {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 1rem 1.125rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.yappie-list-row:last-child { border-bottom: none; }
+
+.yappie-list-btn {
+  width: 100%;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.yappie-list-btn:hover  { background: var(--surface-2); }
+.yappie-list-btn:active { background: var(--surface-3); }
+
+.yappie-list-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text-1);
+}
+
+.yappie-list-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-2);
+  margin-top: 0.125rem;
+}
+
+/* Danger row — brighter white to differentiate, no color */
+.yappie-list-danger .yappie-list-title { opacity: 0.6; }
+.yappie-list-danger:hover { background: rgba(255,255,255,0.03) !important; }
+
+/* ================================================================
+   SETTINGS PANEL
+================================================================ */
+.yappie-settings-panel {
+  padding: 0 1.125rem 1rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--text-2);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+/* ================================================================
+   BACK LINK
+================================================================ */
+.yappie-back-link {
+  margin-top: auto;
+  padding-top: 2rem;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-2);
+  transition: color 0.2s;
+}
+
+.yappie-back-link:hover { color: var(--text-1); }
+
+/* ================================================================
+   ICON BUTTON
+================================================================ */
+.yappie-icon-btn {
+  display: flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.625rem;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  color: var(--text-2);
+  transition: all 0.18s;
+}
+
+.yappie-icon-btn:hover {
+  border-color: var(--border-hi);
+  color: var(--text-1);
+  background: var(--surface-2);
+}
+
+/* ================================================================
+   PAGE TITLE
+================================================================ */
+.yappie-page-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-1);
+}
+
+.yappie-page-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-2);
+  margin-top: 0.125rem;
+}
+
+/* ================================================================
+   FRIEND REQUEST BUTTON
+================================================================ */
+.yappie-requests-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.4375rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--text-2);
+  transition: all 0.18s;
+  flex-shrink: 0;
+}
+
+.yappie-requests-btn:hover {
+  border-color: var(--border-hi);
+  color: var(--text-1);
+  background: var(--surface-2);
+}
+
+.yappie-requests-btn-on {
+  border-color: var(--border-hi);
+  background: var(--surface-2);
+  color: var(--text-1);
+}
+
+.yappie-requests-count {
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--text-1);
+  font-size: 0.5rem;
+  font-weight: 800;
+  color: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ================================================================
+   REQUESTS PANEL
+================================================================ */
+.yappie-requests-panel {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border-hi);
+  background: var(--surface-2);
+  animation: yappie-panel-in 0.22s ease;
+}
+
+@keyframes yappie-panel-in {
+  from { opacity: 0; transform: translateY(-5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.yappie-panel-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+
+/* ================================================================
+   REQUEST CARD
+================================================================ */
+.yappie-request-card {
+  padding: 0.875rem;
+  border-radius: 0.75rem;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+}
+
+/* ================================================================
+   SEARCH
+================================================================ */
+.yappie-search-wrap { position: relative; margin-bottom: 1rem; }
+
+.yappie-search {
+  width: 100%;
+  padding: 0.8125rem 1rem 0.8125rem 2.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 400;
+  color: var(--text-1);
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.yappie-search::placeholder { color: var(--text-3); }
+
+.yappie-search:focus {
+  border-color: var(--border-hi);
+  background: var(--surface-2);
+}
+
+/* ================================================================
+   FRIEND LIST
+================================================================ */
+.yappie-friend-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-radius: 1.125rem;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  overflow: hidden;
+}
+
+.yappie-friend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.9375rem 1rem;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+  cursor: pointer;
+}
+
+.yappie-friend-item:last-child { border-bottom: none; }
+.yappie-friend-item:hover      { background: var(--surface-2); }
+.yappie-friend-item:active     { background: var(--surface-3); }
+
+.yappie-friend-avatar {
+  display: flex;
+  height: 2.75rem;
+  width: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: var(--surface-3);
+  border: 1px solid var(--border-hi);
+  color: var(--text-1);
+  flex-shrink: 0;
+}
+
+/* ================================================================
+   EMPTY STATE
+================================================================ */
+.yappie-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3.5rem 1.5rem;
+  text-align: center;
+}
+
+.yappie-empty-icon {
+  display: flex;
+  height: 3.5rem;
+  width: 3.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-hi);
+  margin-bottom: 1rem;
+  color: var(--text-2);
+}
+
+/* ================================================================
+   BUTTONS
+================================================================ */
+.yappie-btn-primary {
+  border-radius: 999px;
+  background: var(--text-1);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--bg);
+  transition: opacity 0.18s, transform 0.18s;
+}
+
+.yappie-btn-primary:hover  { opacity: 0.88; }
+.yappie-btn-primary:active { transform: scale(0.97); opacity: 0.82; }
+
+.yappie-btn-ghost {
+  border-radius: 0.625rem;
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-2);
+  background: var(--surface-1);
+  transition: all 0.18s;
+}
+
+.yappie-btn-ghost:hover {
+  border-color: var(--border-hi);
+  color: var(--text-1);
+  background: var(--surface-2);
+}
+
+/* ================================================================
+   DESKTOP HOVER OVERRIDES
+================================================================ */
+@media (min-width: 1024px) {
+  .yappie-card:hover         { border-color: var(--border-hi); }
+  .yappie-friend-item:hover  { background: var(--surface-2); }
+  .yappie-requests-btn:hover { border-color: var(--border-hi); }
+}
+
+/* ================================================================
+   AUTH & ONBOARDING — premium monochrome
+================================================================ */
+.yappie-auth-page {
+  position: relative;
+  min-height: 100dvh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  color: var(--text-1);
+}
+
+.yappie-auth-header {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: max(1.125rem, env(safe-area-inset-top)) 1.25rem 0.75rem;
+  max-width: 72rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+@media (min-width: 640px) {
+  .yappie-auth-header { padding-left: 2rem; padding-right: 2rem; }
+}
+
+.yappie-auth-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 999px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+}
+
+.yappie-auth-nav-link {
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-2);
+  transition: color 0.18s, background 0.18s;
+}
+
+.yappie-auth-nav-link:hover,
+.yappie-auth-nav-link-active {
+  color: var(--text-1);
+  background: var(--surface-2);
+}
+
+.yappie-auth-nav-btn {
+  padding: 0.5rem 1.125rem;
+  border-radius: 999px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-1);
+  background: transparent;
+  border: 1px solid var(--border-hi);
+  transition: all 0.18s;
+  cursor: pointer;
+}
+
+.yappie-auth-nav-btn:hover {
+  background: var(--surface-1);
+  border-color: var(--border-wh);
+}
+
+.yappie-auth-main {
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  gap: 3rem;
+  max-width: 72rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+}
+
+@media (min-width: 1024px) {
+  .yappie-auth-main {
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    padding: 3rem 2rem 4rem;
+  }
+}
+
+.yappie-auth-hero {
+  animation: yappie-fade-in-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.yappie-auth-hero-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(2.5rem, 6vw, 4.25rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.02;
+  color: var(--text-1);
+}
+
+.yappie-auth-hero-accent {
+  display: block;
+  color: var(--text-2);
+  font-weight: 600;
+}
+
+.yappie-auth-hero-sub {
+  margin-top: 1.25rem;
+  max-width: 28rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--text-2);
+}
+
+.yappie-auth-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+
+.yappie-auth-panel {
+  width: 100%;
+  max-width: 26rem;
+  margin: 0 auto;
+  padding: 2rem;
+  border-radius: 1.25rem;
+  border: 1px solid var(--border);
+  background: linear-gradient(160deg, var(--surface-1) 0%, var(--bg) 100%);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  animation: yappie-fade-in-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+@media (min-width: 1024px) {
+  .yappie-auth-panel { margin-left: auto; margin-right: 0; }
+}
+
+.yappie-auth-eyebrow {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 0.5rem;
+}
+
+.yappie-auth-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-1);
+  line-height: 1.1;
+}
+
+.yappie-auth-desc {
+  margin-top: 0.5rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+
+.yappie-auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding: 0.3rem;
+  border-radius: 0.875rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+
+.yappie-auth-tab {
+  padding: 0.75rem 1rem;
+  border-radius: 0.625rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-2);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.yappie-auth-tab:hover:not(.yappie-auth-tab-on) {
+  color: var(--text-1);
+  background: var(--surface-1);
+}
+
+.yappie-auth-tab-on {
+  background: var(--text-1);
+  color: var(--bg);
+  font-weight: 600;
+}
+
+.yappie-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.yappie-field + .yappie-field,
+.yappie-auth-form > .yappie-field {
+  margin-top: 1rem;
+}
+
+.yappie-field-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.yappie-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.yappie-input-icon {
+  position: absolute;
+  left: 1rem;
+  color: var(--text-3);
+  pointer-events: none;
+  transition: color 0.18s;
+}
+
+.yappie-input-wrap:focus-within .yappie-input-icon {
+  color: var(--text-2);
+}
+
+.yappie-input {
+  width: 100%;
+  padding: 0.875rem 1rem 0.875rem 2.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-1);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  outline: none;
+}
+
+.yappie-input-no-icon {
+  padding-left: 1rem;
+}
+
+.yappie-input::placeholder {
+  color: var(--text-3);
+  font-weight: 400;
+}
+
+.yappie-input:focus {
+  border-color: var(--border-hi);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.04);
+}
+
+.yappie-input-toggle {
+  position: absolute;
+  right: 0.75rem;
+  padding: 0.25rem;
+  color: var(--text-3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.18s;
+}
+
+.yappie-input-toggle:hover {
+  color: var(--text-1);
+}
+
+.yappie-select-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-1);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s;
+}
+
+.yappie-select-trigger:hover,
+.yappie-select-trigger:focus {
+  border-color: var(--border-hi);
+  outline: none;
+}
+
+.yappie-select-trigger-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.yappie-select-name {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.yappie-select-tag {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.5625rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-top: 0.125rem;
+}
+
+.yappie-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  right: 0;
+  z-index: 50;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-hi);
+  background: var(--surface-1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  animation: yappie-fade-in-up 0.2s ease both;
+}
+
+.yappie-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.yappie-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.yappie-dropdown-item:hover {
+  background: var(--surface-2);
+}
+
+.yappie-auth-error {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-2);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-2);
+  text-align: center;
+}
+
+.yappie-auth-submit {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  padding: 0.9375rem 1.25rem;
+  border-radius: 0.75rem;
+  border: none;
+  background: var(--text-1);
+  color: var(--bg);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.18s, transform 0.18s;
+}
+
+.yappie-auth-submit:hover:not(:disabled) {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.yappie-auth-submit:active:not(:disabled) {
+  transform: scale(0.98);
+  opacity: 0.85;
+}
+
+.yappie-auth-submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.yappie-auth-divider {
+  position: relative;
+  margin: 1.5rem 0;
+  text-align: center;
+}
+
+.yappie-auth-divider::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--border);
+}
+
+.yappie-auth-divider span {
+  position: relative;
+  padding: 0 0.75rem;
+  background: var(--surface-1);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.yappie-auth-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.5625rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+/* Onboarding — centered single panel */
+.yappie-onboard {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1.25rem max(2rem, env(safe-area-inset-bottom));
+}
+
+.yappie-onboard-panel {
+  width: 100%;
+  max-width: 24rem;
+  padding: 2rem;
+  border-radius: 1.25rem;
+  border: 1px solid var(--border);
+  background: linear-gradient(160deg, var(--surface-1) 0%, var(--bg) 100%);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  animation: yappie-fade-in-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.yappie-onboard-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+/* Identity modal */
+.yappie-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: yappie-fade-in-up 0.25s ease both;
+}
+
+.yappie-modal {
+  width: 100%;
+  max-width: 22rem;
+  padding: 2rem;
+  border-radius: 1.25rem;
+  border: 1px solid var(--border-hi);
+  background: linear-gradient(160deg, var(--surface-2) 0%, var(--surface-1) 100%);
+  box-shadow: 0 32px 100px rgba(0, 0, 0, 0.7);
+}
+
+.yappie-modal-icon {
+  display: flex;
+  height: 3rem;
+  width: 3rem;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-hi);
+  background: var(--bg);
+  color: var(--text-1);
+}
+
+.yappie-modal-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-align: center;
+  color: var(--text-1);
+}
+
+.yappie-modal-sub {
+  margin-top: 0.5rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  text-align: center;
+  color: var(--text-2);
+}
+
+.yappie-handle-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.yappie-handle-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.5625rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.yappie-handle-value {
+  margin-top: 0.25rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text-1);
+  letter-spacing: -0.01em;
+}
+
+.yappie-handle-copy {
+  flex-shrink: 0;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.yappie-handle-copy:hover {
+  border-color: var(--border-hi);
+  color: var(--text-1);
+}
+
+.yappie-modal-note {
+  margin-top: 1rem;
+  padding: 0.875rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+
+.yappie-modal-note strong {
+  color: var(--text-1);
+  font-weight: 600;
+}
+
+/* ================================================================
+   FRIENDS HUB — Premium redesign
+================================================================ */
+
+/* ─── Header ─── */
+.fh-header-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.fh-header-title-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.fh-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: var(--text-1);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.fh-sub {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-3);
+  margin-top: 0.2rem;
+  display: block;
+}
+
+.fh-online-badge {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+/* ─── Requests Button ─── */
+.fh-req-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.4375rem 0.875rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.fh-req-btn:hover { border-color: var(--border-hi); color: var(--text-1); }
+
+.fh-req-btn-active {
+  background: var(--text-1);
+  color: var(--bg);
+  border-color: var(--text-1);
+}
+
+.fh-req-badge {
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: #ef4444;
+  font-size: 0.55rem;
+  font-weight: 800;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── Requests Panel ─── */
+.fh-req-panel {
+  background: var(--surface-2);
+  border: 1px solid var(--border-hi);
+  border-radius: 1.25rem;
+  padding: 1.125rem;
+  margin-bottom: 1rem;
+  animation: fh-slide-in 0.22s ease-out;
+}
+
+@keyframes fh-slide-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fh-req-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.fh-section-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.fh-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+.fh-close-btn:hover { color: var(--text-1); background: var(--surface-3); }
+
+/* ─── Request Card ─── */
+.fh-req-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.fh-req-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 0.875rem;
+  animation: fh-slide-in 0.25s ease-out both;
+  flex-wrap: wrap;
+}
+
+.fh-req-card-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.fh-req-info { min-width: 0; }
+
+.fh-req-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fh-req-college {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-3);
+  margin-top: 0.1rem;
+}
+
+.fh-req-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.fh-btn-decline {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+.fh-btn-decline:hover:not(:disabled) { border-color: #ef4444; color: #ef4444; }
+.fh-btn-decline:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.fh-btn-accept {
+  background: linear-gradient(135deg, #a855f7, #7c3aed);
+  border: none;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.5rem 1.125rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: opacity 0.18s, transform 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  white-space: nowrap;
+  box-shadow: 0 2px 12px rgba(124,58,237,0.4);
+}
+.fh-btn-accept:hover:not(:disabled) { opacity: 0.88; transform: scale(1.03); }
+.fh-btn-accept:active:not(:disabled) { transform: scale(0.96); }
+.fh-btn-accept:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ─── Loading spinner inside accept button ─── */
+.fh-spinner {
+  width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: fh-spin 0.7s linear infinite;
+  display: inline-block;
+}
+@keyframes fh-spin { to { transform: rotate(360deg); } }
+
+/* ─── Avatar ─── */
+.fh-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+/* ─── Search ─── */
+.fh-search-wrap {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.fh-search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-3);
+  pointer-events: none;
+  width: 16px; height: 16px;
+}
+
+.fh-search {
+  width: 100%;
+  height: 3rem;
+  padding: 0 2.75rem 0 2.875rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9375rem;
+  color: var(--text-1);
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+.fh-search::placeholder { color: var(--text-3); }
+.fh-search:focus {
+  border-color: rgba(168,85,247,0.5);
+  background: var(--surface-2);
+  box-shadow: 0 0 0 3px rgba(168,85,247,0.1);
+}
+
+.fh-search-clear {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--surface-3);
+  border: none;
+  color: var(--text-3);
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.fh-search-clear:hover { background: var(--surface-hi); color: var(--text-1); }
+
+/* ─── Section header ─── */
+.fh-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #4ade80;
+  margin-bottom: 0.5rem;
+  padding: 0 0.25rem;
+}
+
+.fh-section-header-muted { color: var(--text-3); }
+
+/* ─── Friend list ─── */
+.fh-friend-list { display: flex; flex-direction: column; }
+
+.fh-friend-row {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.875rem 0.75rem;
+  border-radius: 1rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  animation: fh-slide-in 0.2s ease-out both;
+  text-decoration: none;
+  color: inherit;
+}
+
+.fh-friend-row:hover { background: var(--surface-2); }
+.fh-friend-row:active { background: var(--surface-3); }
+
+.fh-friend-avatar-wrap { position: relative; flex-shrink: 0; }
+
+.fh-presence {
+  position: absolute;
+  bottom: 1px; right: 1px;
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  border: 2px solid var(--bg);
+}
+
+.fh-presence-online  { background: #4ade80; box-shadow: 0 0 6px rgba(74,222,128,0.5); }
+.fh-presence-offline { background: var(--surface-3); }
+
+.fh-friend-meta { flex: 1; min-width: 0; }
+
+.fh-friend-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fh-friend-college {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-3);
+  margin-top: 0.1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fh-friend-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.fh-active-pill {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #4ade80;
+  background: rgba(74,222,128,0.1);
+  border: 1px solid rgba(74,222,128,0.2);
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+}
+
+.fh-chevron { color: var(--text-3); }
+
+/* ─── Skeleton loader ─── */
+.fh-loading { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.fh-skeleton {
+  height: 68px;
+  border-radius: 1rem;
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 25%,
+    var(--surface-3) 50%,
+    var(--surface-2) 75%
+  );
+  background-size: 200% 100%;
+  animation: fh-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes fh-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── Empty state ─── */
+.fh-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3.5rem 1.5rem 2rem;
+  text-align: center;
+}
+
+.fh-empty-art {
+  position: relative;
+  width: 80px; height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+.fh-empty-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+}
+
+.fh-empty-ring-1 { inset: 0; }
+.fh-empty-ring-2 { inset: -16px; opacity: 0.4; }
+
+.fh-empty-center {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 1px solid var(--border-hi);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-3);
+  z-index: 1;
+}
+
+.fh-empty-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-1);
+  margin: 0 0 0.5rem;
+}
+
+.fh-empty-sub {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--text-3);
+  max-width: 240px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.fh-start-btn {
+  margin-top: 1.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #a855f7, #7c3aed);
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.18s, transform 0.15s;
+  box-shadow: 0 4px 18px rgba(124,58,237,0.4);
+}
+.fh-start-btn:hover  { opacity: 0.88; }
+.fh-start-btn:active { transform: scale(0.97); }
+
