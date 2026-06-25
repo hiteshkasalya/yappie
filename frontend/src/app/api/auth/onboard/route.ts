@@ -36,8 +36,8 @@ export async function POST(request: NextRequest) {
     await user.save();
 
     return Response.json({ user: toPublicUser(user) }, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Onboarding error:", error);
-    return Response.json({ error: "Failed to update onboarding info. Please try again." }, { status: 500 });
+    return Response.json({ error: `Failed to update onboarding info: ${error?.message || error}` }, { status: 500 });
   }
 }

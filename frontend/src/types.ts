@@ -30,6 +30,7 @@ export type FriendListItem = {
   status: FriendStatus;
   requestedByMe: boolean;
   friend: PublicUser;
+  unreadCount?: number;
 };
 
 export type AdminStats = {

@@ -6,6 +6,7 @@ export type MessageDocument = mongoose.Document & {
   roomId: string;
   chatType: "random" | "campus" | "friend";
   message: string;
+  isRead: boolean;
   timestamp: Date;
 };
 
@@ -15,6 +16,7 @@ const MessageSchema = new mongoose.Schema<MessageDocument>({
   roomId: { type: String, required: true, index: true },
   chatType: { type: String, enum: ["random", "campus", "friend"], required: true },
   message: { type: String, required: true, maxlength: 700 },
+  isRead: { type: Boolean, default: false },
   timestamp: { type: Date, default: Date.now, index: true, expires: 86400 }
 });
 

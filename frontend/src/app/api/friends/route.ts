@@ -6,6 +6,7 @@ import { createPairKey } from "@/lib/pairKey";
 import { toPublicUser } from "@/lib/publicUser";
 import Friendship from "@/models/Friendship";
 import User from "@/models/User";
+import Message from "@/models/Message";
 
 const createFriendSchema = z.object({
   friendId: z.string().min(1)
@@ -31,6 +32,19 @@ export async function GET(request: NextRequest) {
   const users = await User.find({ _id: { $in: userIds } });
   const usersById = new Map(users.map((friend) => [String(friend._id), friend]));
 
+  // Query all unread messages for the current user
+  const unreadMessages = await Message.find({
+    receiverId: user._id,
+    chatType: "friend",
+    isRead: false
+  });
+
+  const unreadCountBySender = new Map<string, number>();
+  for (const msg of unreadMessages) {
+    const senderStr = String(msg.senderId);
+    unreadCountBySender.set(senderStr, (unreadCountBySender.get(senderStr) || 0) + 1);
+  }
+
   return Response.json({
     friends: friendships
       .map((friendship) => {
@@ -41,11 +55,14 @@ export async function GET(request: NextRequest) {
           return null;
         }
 
+        const unreadCount = unreadCountBySender.get(String(friendId)) || 0;
+
         return {
           friendshipId: String(friendship._id),
           status: friendship.status,
           requestedByMe: String(friendship.requestedBy) === String(user._id),
-          friend: toPublicUser(friend)
+          friend: toPublicUser(friend),
+          unreadCount
         };
       })
       .filter(Boolean)

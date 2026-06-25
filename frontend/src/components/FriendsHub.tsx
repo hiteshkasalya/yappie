@@ -5,17 +5,14 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
-  Check,
   ChevronRight,
-  MessageCircle,
   Search,
   UserPlus,
   X,
   Users,
-  Wifi,
-  WifiOff,
 } from "lucide-react";
 import { authFetch } from "@/lib/clientSession";
+import { getSocket } from "@/lib/socketClient";
 import { useAnonymousSession } from "@/hooks/useAnonymousSession";
 import type { FriendListItem } from "@/types";
 import { OnboardingForm } from "./OnboardingForm";
@@ -50,8 +47,6 @@ export function FriendsHub() {
   const [friends, setFriends] = useState<FriendListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [showRequests, setShowRequests] = useState(false);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const loadFriends = useCallback(async () => {
@@ -74,6 +69,48 @@ export function FriendsHub() {
     if (session) void loadFriends();
   }, [ready, session, router, loadFriends]);
 
+  // Real-time socket status updates
+  useEffect(() => {
+    if (!session) return;
+    const socket = getSocket(session);
+
+    const onPresence = (payload: { friendId: string; online: boolean }) => {
+      setFriends((current) =>
+        current.map((item) => {
+          if (item.friend.id === payload.friendId) {
+            return {
+              ...item,
+              friend: { ...item.friend, online: payload.online }
+            };
+          }
+          return item;
+        })
+      );
+    };
+
+    const onMessage = (payload: any) => {
+      setFriends((current) =>
+        current.map((item) => {
+          if (item.friend.id === payload.senderId) {
+            return {
+              ...item,
+              unreadCount: (item.unreadCount || 0) + 1
+            };
+          }
+          return item;
+        })
+      );
+    };
+
+    socket.on("friend:presence", onPresence);
+    socket.on("chat:message", onMessage);
+
+    return () => {
+      socket.off("friend:presence", onPresence);
+      socket.off("chat:message", onMessage);
+    };
+  }, [session]);
+
   const pendingRequests = useMemo(
     () => friends.filter(f => f.status === "pending" && !f.requestedByMe),
     [friends]
@@ -88,44 +125,18 @@ export function FriendsHub() {
     [friends, search]
   );
 
-  const onlineFriends = acceptedFriends.filter(f => f.friend.online);
-  const offlineFriends = acceptedFriends.filter(f => !f.friend.online);
-
-  useEffect(() => {
-    if (pendingRequests.length > 0) setShowRequests(true);
-  }, [pendingRequests.length]);
+  // Unified list: online friends first, offline friends second
+  const sortedFriends = useMemo(() => {
+    return [...acceptedFriends].sort((a, b) => {
+      if (a.friend.online && !b.friend.online) return -1;
+      if (!a.friend.online && b.friend.online) return 1;
+      return 0;
+    });
+  }, [acceptedFriends]);
 
   if (!ready || !session) return <div className="yappie-app yappie-loading" />;
   if (session.user.age === undefined || session.user.college === undefined) {
     return <OnboardingForm />;
-  }
-
-  async function acceptRequest(friendshipId: string) {
-    setActionLoading(friendshipId + "-accept");
-    try {
-      const res = await authFetch(`/api/friends/${friendshipId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ action: "accept" }),
-      });
-      if (res.ok) {
-        // Reload friends list immediately
-        await loadFriends();
-        if (pendingRequests.length <= 1) setShowRequests(false);
-      }
-    } catch (e) { console.error(e); }
-    finally { setActionLoading(null); }
-  }
-
-  async function rejectRequest(friendshipId: string) {
-    setActionLoading(friendshipId + "-reject");
-    try {
-      await authFetch(`/api/friends/${friendshipId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ action: "reject" }),
-      });
-      await loadFriends();
-    } catch (e) { console.error(e); }
-    finally { setActionLoading(null); }
   }
 
   return (
@@ -141,23 +152,22 @@ export function FriendsHub() {
               <h1 className="fh-title">Friends</h1>
               <span className="fh-sub">
                 {acceptedFriends.length} friend{acceptedFriends.length !== 1 ? "s" : ""}
-                {onlineFriends.length > 0 && (
-                  <span className="fh-online-badge"> · {onlineFriends.length} online</span>
+                {acceptedFriends.filter(f => f.friend.online).length > 0 && (
+                  <span className="fh-online-badge"> · {acceptedFriends.filter(f => f.friend.online).length} online</span>
                 )}
               </span>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setShowRequests(v => !v)}
-              className={`fh-req-btn ${showRequests ? "fh-req-btn-active" : ""}`}
+            <Link
+              href="/friends/requests"
+              className="fh-req-btn"
             >
               <UserPlus className="h-3.5 w-3.5" strokeWidth={2.5} />
               <span>Requests</span>
               {pendingRequests.length > 0 && (
                 <span className="fh-req-badge">{pendingRequests.length > 9 ? "9+" : pendingRequests.length}</span>
               )}
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -167,60 +177,6 @@ export function FriendsHub() {
       </header>
 
       <main className="yappie-main yappie-main-scroll">
-
-        {/* ── REQUESTS PANEL ── */}
-        {showRequests && (
-          <div className="fh-req-panel">
-            <div className="fh-req-panel-header">
-              <span className="fh-section-label">Friend Requests</span>
-              <button type="button" onClick={() => setShowRequests(false)} className="fh-close-btn">
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="fh-req-list">
-              {pendingRequests.length === 0 ? (
-                <div className="fh-req-empty">
-                  <span>✓</span>
-                  <p>No pending friend requests</p>
-                </div>
-              ) : pendingRequests.map((req, i) => (
-                <div key={req.friendshipId} className="fh-req-card" style={{ animationDelay: `${i * 0.05}s` }}>
-                  <div className="fh-req-card-left">
-                    <Avatar username={req.friend.anonymousUsername} size={46} />
-                    <div className="fh-req-info">
-                      <p className="fh-req-name">@{req.friend.anonymousUsername.toLowerCase()}</p>
-                      <p className="fh-req-college">{req.friend.college || "Student"}</p>
-                    </div>
-                  </div>
-                  <div className="fh-req-actions">
-                    <button
-                      type="button"
-                      onClick={() => void rejectRequest(req.friendshipId)}
-                      disabled={actionLoading !== null}
-                      className="fh-btn-decline"
-                    >
-                      {actionLoading === req.friendshipId + "-reject" ? "..." : "Decline"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void acceptRequest(req.friendshipId)}
-                      disabled={actionLoading !== null}
-                      className="fh-btn-accept"
-                    >
-                      {actionLoading === req.friendshipId + "-accept" ? (
-                        <span className="fh-spinner" />
-                      ) : (
-                        <><Check className="h-3.5 w-3.5" />Accept</>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* ── SEARCH ── */}
         <div className="fh-search-wrap">
           <Search className="fh-search-icon" />
@@ -261,38 +217,15 @@ export function FriendsHub() {
             </p>
             {!search && (
               <Link href="/" className="fh-start-btn">
-                <MessageCircle className="h-4 w-4" />
                 Start matching
               </Link>
             )}
           </div>
         ) : (
           <div className="fh-friend-list">
-            {/* Online section */}
-            {onlineFriends.length > 0 && (
-              <>
-                <div className="fh-section-header">
-                  <Wifi className="h-3 w-3" />
-                  <span>Online now · {onlineFriends.length}</span>
-                </div>
-                {onlineFriends.map((item, i) => (
-                  <FriendRow key={item.friendshipId} item={item} index={i} />
-                ))}
-              </>
-            )}
-
-            {/* Offline section */}
-            {offlineFriends.length > 0 && (
-              <>
-                <div className="fh-section-header fh-section-header-muted" style={{ marginTop: onlineFriends.length > 0 ? "1rem" : 0 }}>
-                  <WifiOff className="h-3 w-3" />
-                  <span>Offline · {offlineFriends.length}</span>
-                </div>
-                {offlineFriends.map((item, i) => (
-                  <FriendRow key={item.friendshipId} item={item} index={i} />
-                ))}
-              </>
-            )}
+            {sortedFriends.map((item, i) => (
+              <FriendRow key={item.friendshipId} item={item} index={i} />
+            ))}
           </div>
         )}
       </main>
@@ -316,7 +249,11 @@ function FriendRow({ item, index }: { item: FriendListItem; index: number }) {
         <p className="fh-friend-college">{item.friend.college || "Student"}</p>
       </div>
       <div className="fh-friend-right">
-        {item.friend.online && <span className="fh-active-pill">active</span>}
+        {item.unreadCount && item.unreadCount > 0 ? (
+          <span className="fh-unread-badge">{item.unreadCount}</span>
+        ) : item.friend.online ? (
+          <span className="fh-active-pill">active</span>
+        ) : null}
         <ChevronRight className="h-4 w-4 fh-chevron" />
       </div>
     </Link>

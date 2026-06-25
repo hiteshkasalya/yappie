@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { User, Users } from "lucide-react";
+import { authFetch } from "@/lib/clientSession";
 
 export function DashboardTabs({
   active,
@@ -12,6 +14,34 @@ export function DashboardTabs({
   onProfileClick?: () => void;
   requestCount?: number;
 }) {
+  const [counts, setCounts] = useState({ pendingRequests: requestCount, unreadMessages: 0 });
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadBadges() {
+      try {
+        const res = await authFetch("/api/friends/badges");
+        if (res.ok && mounted) {
+          const data = await res.json() as { pendingRequests: number; unreadMessages: number };
+          setCounts({
+            pendingRequests: data.pendingRequests ?? 0,
+            unreadMessages: data.unreadMessages ?? 0,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load badges:", err);
+      }
+    }
+    void loadBadges();
+    const interval = setInterval(loadBadges, 10000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  const hasAlert = counts.pendingRequests > 0 || counts.unreadMessages > 0;
+
   return (
     <nav className="yappie-tabs" aria-label="Dashboard navigation">
       <Link
@@ -20,8 +50,8 @@ export function DashboardTabs({
       >
         <Users className="h-[15px] w-[15px]" strokeWidth={2.2} />
         <span>Friends</span>
-        {requestCount > 0 && active !== "friends" && (
-          <span className="yappie-tab-badge">{requestCount > 9 ? "9+" : requestCount}</span>
+        {hasAlert && active !== "friends" && (
+          <span className="yappie-tab-red-dot" />
         )}
       </Link>
       {onProfileClick ? (

@@ -19,6 +19,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return Response.json({ error: "Friend chat is not available" }, { status: 403 });
   }
 
+  await Message.updateMany(
+    { roomId: `friend:${pairKey}`, receiverId: user._id, isRead: false },
+    { isRead: true }
+  );
+
   const messages = await Message.find({ roomId: `friend:${pairKey}` }).sort({ timestamp: 1 }).limit(100);
 
   return Response.json({

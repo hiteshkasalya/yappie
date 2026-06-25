@@ -105,11 +105,8 @@ export function JoinForm() {
               <div className="pointer-events-none absolute -bottom-20 -left-20 h-48 w-48 rounded-full bg-fuchsia-500/10 blur-3xl" />
               
               {/* Titles */}
-              <div className="relative mb-8 text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400/20 to-fuchsia-500/20 border border-white/10 shadow-inner">
-                  <LockKeyhole className="h-6 w-6 text-cyan-300" />
-                </div>
-                <h2 className="mb-2 font-heading text-3xl font-black tracking-tight text-white drop-shadow-md">
+              <div className="relative mb-10 text-center">
+                <h2 className="mb-3 font-heading text-4xl font-black tracking-tight text-white drop-shadow-md">
                   Join Yappie
                 </h2>
                 <p className="text-sm font-semibold text-slate-400 leading-relaxed">
@@ -123,10 +120,9 @@ export function JoinForm() {
               </div>
 
               {/* Google Authentication Button */}
-              <div className="relative z-10 flex flex-col items-center gap-4">
-                <div className="w-full flex justify-center rounded-full overflow-hidden border border-white/10 shadow-[0_4px_12px_rgba(0,0,0,0.3)] bg-black/40 p-1 hover:bg-black/60 transition-colors">
-                  <GoogleLogin
-                    onSuccess={async (credentialResponse) => {
+              <div className="relative z-10 flex flex-col items-center justify-center">
+                <GoogleLogin
+                  onSuccess={async (credentialResponse) => {
                     try {
                       setLoading(true);
                       const res = await fetch("/api/auth/google", {
@@ -148,19 +144,13 @@ export function JoinForm() {
                     }
                   }}
                   onError={() => setError("Google Login failed.")}
-                  theme="filled_black"
+                  theme="outline"
                   shape="pill"
                   size="large"
                   text="continue_with"
-                  width="280"
+                  width="320"
                 />
               </div>
-            </div>
-
-            {/* Security Guarantee label */}
-            <div className="mt-8 flex select-none items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest text-slate-500">
-              <ShieldCheck className="h-4 w-4 text-cyan-400/80" /> 100% Privacy Session Safe
-            </div>
 
             </div>
           </div>

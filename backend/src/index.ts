@@ -117,9 +117,15 @@ function findMatch(user: WaitingUser, queue: Set<WaitingUser>) {
 
 function addUserSocket(userId: string, socketId: string) {
   const sockets = socketsByUserId.get(userId) ?? new Set<string>();
+  const isFirst = sockets.size === 0;
   sockets.add(socketId);
   socketsByUserId.set(userId, sockets);
   runtimeStats.onlineUserIds.add(userId);
+  if (isFirst) {
+    void User.updateOne({ _id: userId }, { isOnline: true, lastSeenAt: new Date() }).then(() => {
+      void broadcastPresence(userId, true);
+    });
+  }
 }
 
 function removeUserSocket(userId: string, socketId: string) {
@@ -128,7 +134,24 @@ function removeUserSocket(userId: string, socketId: string) {
   if (!sockets || sockets.size === 0) {
     socketsByUserId.delete(userId);
     runtimeStats.onlineUserIds.delete(userId);
-    void User.updateOne({ _id: userId }, { isOnline: false, lastSeenAt: new Date() });
+    void User.updateOne({ _id: userId }, { isOnline: false, lastSeenAt: new Date() }).then(() => {
+      void broadcastPresence(userId, false);
+    });
+  }
+}
+
+async function broadcastPresence(userId: string, online: boolean) {
+  try {
+    const friendships = await Friendship.find({
+      $or: [{ userId }, { friendId: userId }],
+      status: "accepted"
+    });
+    for (const friendship of friendships) {
+      const friendId = String(friendship.userId) === String(userId) ? String(friendship.friendId) : String(friendship.userId);
+      emitToUser(io, friendId, "friend:presence", { friendId: userId, online });
+    }
+  } catch (err) {
+    console.error("Error broadcasting presence:", err);
   }
 }
 
@@ -185,12 +208,24 @@ async function saveAndEmitMessage(
   let timestamp = new Date().toISOString();
 
   if (chatType === "friend") {
+    // Check if the receiver is currently inside the active chat room
+    const receiverSocketIds = socketsByUserId.get(receiverId) ?? new Set<string>();
+    let receiverInRoom = false;
+    for (const sid of receiverSocketIds) {
+      const s = io.sockets.sockets.get(sid);
+      if (s && s.rooms.has(roomId)) {
+        receiverInRoom = true;
+        break;
+      }
+    }
+
     const savedMessage = await Message.create({
       senderId: socket.data.user._id,
       receiverId,
       roomId,
       chatType,
-      message
+      message,
+      isRead: receiverInRoom
     });
     savedMessageId = String(savedMessage._id);
     timestamp = savedMessage.timestamp.toISOString();
@@ -372,7 +407,6 @@ io.on("connection", async (baseSocket) => {
   const userId = String(socket.data.user._id);
 
   addUserSocket(userId, socket.id);
-  await User.updateOne({ _id: userId }, { isOnline: true, lastSeenAt: new Date() });
   socket.emit("session:ready", { user: toPublicUser(socket.data.user) });
 
   socket.on("match:start", async ({ mode }: { mode: MatchMode }) => {
