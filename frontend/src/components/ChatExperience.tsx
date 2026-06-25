@@ -477,6 +477,11 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
   /* ── Render ──────────────────────────────────────────── */
   return (
     <div className="sc-root" ref={rootRef}>
+      {/* ── AMBIENT BACKGROUND ── */}
+      <div className="sc-ambient-bg">
+        <div className="sc-orb sc-orb-1" />
+        <div className="sc-orb sc-orb-2" />
+      </div>
 
       {/* ── HEADER ── */}
       <header className="sc-header">

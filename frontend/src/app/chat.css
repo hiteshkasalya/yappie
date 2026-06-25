@@ -12,7 +12,7 @@
   /* height set dynamically by visualViewport JS on iOS, fallback for others */
   height: 100%;
   height: 100dvh;
-  background: #0a0a0a;
+  background: radial-gradient(circle at 50% 0%, #111224 0%, #06070c 100%);
   display: flex;
   flex-direction: column;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -172,6 +172,7 @@
   flex-direction: column;
   overflow: hidden;
   position: relative;
+  z-index: 2;
 }
 
 /* ─── WAITING STATE ────────────────────────────────────────── */
@@ -264,16 +265,19 @@
 /* ─── SYSTEM MESSAGE PILL ──────────────────────────────────── */
 .sc-system-pill {
   align-self: center;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.08);
-  color: rgba(255,255,255,0.45);
-  font-size: 0.75rem;
-  font-weight: 500;
-  padding: 0.3rem 0.875rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.35rem 0.95rem;
   border-radius: 999px;
-  margin: 0.5rem 0;
+  margin: 0.75rem 0;
   text-align: center;
   animation: sc-fade-in 0.3s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 @keyframes sc-fade-in {
@@ -308,28 +312,49 @@
 }
 
 .sc-bubble {
-  max-width: min(72%, 320px);
-  padding: 0.55rem 0.875rem;
-  border-radius: 18px;
+  max-width: min(72%, 325px);
+  padding: 0.7rem 1.05rem;
+  border-radius: 20px;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.25rem;
   word-break: break-word;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  font-weight: 550;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease-out;
+  position: relative;
+  z-index: 5;
+}
+
+.sc-bubble:hover {
+  transform: scale(1.01);
 }
 
 .sc-bubble-mine {
-  background: linear-gradient(135deg, #a855f7, #7c3aed);
+  background: linear-gradient(135deg, #5f62f1, #8453f6, #cf3bef);
+  background-size: 200% 200%;
+  animation: sc-gradient-flow 8s ease infinite;
   color: #fff;
   border-bottom-right-radius: 4px;
+  box-shadow: 0 4px 20px rgba(132, 83, 246, 0.25);
+}
+
+@keyframes sc-gradient-flow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 .sc-bubble-theirs {
-  background: rgba(255,255,255,0.08);
-  color: #f0f0f0;
-  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: #f3f4f6;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-bottom-left-radius: 4px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
 .sc-bubble-text {
@@ -378,6 +403,7 @@
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid rgba(255,255,255,0.05);
+  z-index: 10;
 }
 
 /* ─── SKIP BUTTON ──────────────────────────────────────────── */
@@ -487,4 +513,44 @@
   }
   .sc-input-field { font-size: 16px; }
   .sc-footer { gap: 0.5rem; padding-left: 0.625rem; padding-right: 0.625rem; }
+}
+
+/* ─── AMBIENT DECORATIONS ─────────────────────────────────── */
+.sc-ambient-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.sc-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.12;
+  mix-blend-mode: screen;
+  animation: sc-float 12s ease-in-out infinite alternate;
+}
+
+.sc-orb-1 {
+  top: -10%;
+  left: 20%;
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, #6366f1 0%, transparent 70%);
+}
+
+.sc-orb-2 {
+  bottom: 5%;
+  right: -5%;
+  width: 450px;
+  height: 450px;
+  background: radial-gradient(circle, #d946ef 0%, transparent 70%);
+  animation-delay: -6s;
+}
+
+@keyframes sc-float {
+  0% { transform: translateY(0) scale(1); }
+  100% { transform: translateY(35px) scale(1.1); }
 }
