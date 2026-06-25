@@ -248,7 +248,7 @@ export function JoinForm() {
               <span key={i} className="inline-flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_#22d3ee]" />
                 <span className="text-cyan-300 font-extrabold uppercase tracking-wider text-[10px]">{w.category}:</span>
-                <span className="text-slate-200">"{w.text}"</span>
+                <span className="text-slate-200">&ldquo;{w.text}&rdquo;</span>
               </span>
             ))}
           </div>
@@ -258,7 +258,7 @@ export function JoinForm() {
               <span key={i + 100} className="inline-flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_#22d3ee]" />
                 <span className="text-cyan-300 font-extrabold uppercase tracking-wider text-[10px]">{w.category}:</span>
-                <span className="text-slate-200">"{w.text}"</span>
+                <span className="text-slate-200">&ldquo;{w.text}&rdquo;</span>
               </span>
             ))}
           </div>
