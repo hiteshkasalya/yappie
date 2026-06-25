@@ -234,7 +234,10 @@ expressApp.use(cors({
 expressApp.use(express.json());
 expressApp.use(cookieParser());
 
-connectToDatabase().catch(console.error);
+connectToDatabase().then(async () => {
+  console.log("[Database] Connected. Resetting online statuses...");
+  await User.updateMany({}, { isOnline: false });
+}).catch(console.error);
 
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || "558841127533-v0gpcqrn1f45ru62rknkm79fk73odoa9.apps.googleusercontent.com");
