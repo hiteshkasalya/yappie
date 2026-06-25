@@ -280,26 +280,50 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || "558841127
 // Route: Verify Direct Google SDK Token
 expressApp.post('/api/auth/google', async (req, res) => {
   try {
-    const { token: idToken } = req.body;
-    if (!idToken) return res.status(400).json({ error: 'Missing token' });
+    const { token: idToken, access_token } = req.body;
+    if (!idToken && !access_token) {
+      return res.status(400).json({ error: 'Missing token or access_token' });
+    }
 
-    const ticket = await googleClient.verifyIdToken({
-      idToken,
-      audience: process.env.GOOGLE_CLIENT_ID || "558841127533-v0gpcqrn1f45ru62rknkm79fk73odoa9.apps.googleusercontent.com"
-    });
-    
-    const payload = ticket.getPayload();
-    if (!payload || !payload.email) throw new Error("Invalid Google token payload");
+    let email: string | undefined;
+    let googleId: string | undefined;
 
-    let user = await User.findOne({ email: payload.email });
+    if (idToken) {
+      const ticket = await googleClient.verifyIdToken({
+        idToken,
+        audience: process.env.GOOGLE_CLIENT_ID || "558841127533-v0gpcqrn1f45ru62rknkm79fk73odoa9.apps.googleusercontent.com"
+      });
+      const payload = ticket.getPayload();
+      if (payload) {
+        email = payload.email;
+        googleId = payload.sub;
+      }
+    } else if (access_token) {
+      const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${access_token}` }
+      });
+      if (response.ok) {
+        const payload = await response.json() as { email?: string; sub?: string };
+        email = payload.email;
+        googleId = payload.sub;
+      } else {
+        throw new Error("Failed to verify access token with Google");
+      }
+    }
+
+    if (!email || !googleId) {
+      return res.status(400).json({ error: 'Invalid Google authentication details' });
+    }
+
+    let user = await User.findOne({ email });
     if (user && !user.googleId) {
-      user.googleId = payload.sub;
+      user.googleId = googleId;
       await user.save();
     } else if (!user) {
       const generatedUsername = `User${Math.floor(Math.random() * 10000)}`;
       user = await User.create({
-        googleId: payload.sub,
-        email: payload.email,
+        googleId,
+        email,
         anonymousUsername: generatedUsername
       });
     }

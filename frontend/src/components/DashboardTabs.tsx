@@ -48,11 +48,13 @@ export function DashboardTabs({
         href="/friends"
         className={`yappie-tab ${active === "friends" ? "yappie-tab-on" : ""}`}
       >
-        <Users className="h-[15px] w-[15px]" strokeWidth={2.2} />
-        <span>Friends</span>
-        {hasAlert && active !== "friends" && (
-          <span className="yappie-tab-red-dot" />
-        )}
+        <span className="relative flex items-center gap-1.5">
+          <Users className="h-[15px] w-[15px]" strokeWidth={2.2} />
+          <span>Friends</span>
+          {hasAlert && active !== "friends" && (
+            <span className="absolute -top-1 -right-2 h-2.5 w-2.5 rounded-full bg-[#ef4444] border-2 border-[#0C0C0E] shadow-[0_0_8px_#ef4444]" />
+          )}
+        </span>
       </Link>
       {onProfileClick ? (
         <button
