@@ -99,7 +99,7 @@ export function JoinForm() {
               <span className="campus-gradient-text">Make friends!</span>
             </h1>
 
-            <p className="mb-8 max-w-lg text-base font-bold leading-8 text-slate-200/70 lg:text-lg">
+            <p className="mb-8 max-w-md text-sm sm:text-base font-medium leading-relaxed text-slate-400">
               Your trust matters. Your email and personal information are never visible to other users, and we never sell your data to third parties.
               <br /><br />
               So, relax and start your journey of making meaningful connections.
