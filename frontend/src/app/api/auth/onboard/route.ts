@@ -6,8 +6,19 @@ import { toPublicUser } from "@/lib/publicUser";
 
 const onboardSchema = z.object({
   age: z.coerce.number().int().min(17, "Minimum age is 17").max(80, "Maximum age is 80"),
-  college: z.enum(["MIT WPU", "Other"], {
-    errorMap: () => ({ message: "College must be either 'MIT WPU' or 'Other'." })
+  college: z.enum([
+    "AIT Pune",
+    "COEP",
+    "Cummins",
+    "DY Patil",
+    "MITAOE",
+    "MIT WPU",
+    "PICT",
+    "Symbiosis",
+    "VIT Pune",
+    "Other"
+  ], {
+    errorMap: () => ({ message: "Please select a valid college from the list." })
   })
 });
 

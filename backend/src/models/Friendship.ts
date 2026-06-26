@@ -22,4 +22,7 @@ const FriendshipSchema = new mongoose.Schema<FriendshipDocument>(
   { timestamps: true }
 );
 
+FriendshipSchema.index({ userId: 1, status: 1 });
+FriendshipSchema.index({ friendId: 1, status: 1 });
+
 export default mongoose.models.Friendship || mongoose.model<FriendshipDocument>("Friendship", FriendshipSchema);

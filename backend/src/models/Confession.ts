@@ -34,4 +34,6 @@ const ConfessionSchema = new mongoose.Schema<ConfessionDocument>({
   timestamp: { type: Date, default: Date.now, index: true, expires: 604800 } // TTL 7 days (604800 seconds)
 });
 
+ConfessionSchema.index({ college: 1, timestamp: -1 });
+
 export default mongoose.models.Confession || mongoose.model<ConfessionDocument>("Confession", ConfessionSchema);

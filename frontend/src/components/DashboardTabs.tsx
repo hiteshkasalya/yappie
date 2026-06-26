@@ -29,6 +29,9 @@ export function DashboardTabs({
   useEffect(() => {
     let mounted = true;
     async function loadBadges() {
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+        return;
+      }
       try {
         const res = await authFetch("/api/friends/badges");
         if (res.ok && mounted) {
@@ -45,10 +48,16 @@ export function DashboardTabs({
       }
     }
     void loadBadges();
-    const interval = setInterval(loadBadges, 10000);
+    const interval = setInterval(loadBadges, 20000);
+    if (typeof window !== "undefined") {
+      window.addEventListener("focus", loadBadges);
+    }
     return () => {
       mounted = false;
       clearInterval(interval);
+      if (typeof window !== "undefined") {
+        window.removeEventListener("focus", loadBadges);
+      }
     };
   }, [requestCount]);
 

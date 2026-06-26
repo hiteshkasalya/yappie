@@ -70,7 +70,6 @@ export function DashboardHome() {
         stored.user = data.user;
         saveStoredSession(stored);
       }
-      trackEvent("profile_completed", { age: ageNum, college: editCollege, edit_mode: "settings" });
       setShowSettings(false);
     } catch (err) {
       setEditError("Unable to connect to the server.");
@@ -100,7 +99,7 @@ export function DashboardHome() {
   return (
     <DashboardShell>
       <header className="yappie-header">
-        <div className="yappie-header-inner">
+        <div className="yappie-header-inner flex items-center justify-between">
           <div className="yappie-brand">
             <div className="yappie-brand-mark">
               <MessageCircle className="h-[18px] w-[18px] text-[#0C0C0E]" />
@@ -109,6 +108,12 @@ export function DashboardHome() {
               yappie
             </span>
           </div>
+          <Link 
+            href="/about" 
+            className="font-sans text-xs font-extrabold text-zinc-500 hover:text-white transition-colors duration-200 lowercase tracking-tight"
+          >
+            about
+          </Link>
         </div>
 
         <div className="yappie-header-inner mt-5">
@@ -137,7 +142,6 @@ export function DashboardHome() {
                 <Link
                   href="/chat/campus"
                   className="yappie-card yappie-card-campus"
-                  onClick={() => trackEvent("campus_mode_selected")}
                 >
                   <div className="yappie-card-accent" />
                   <div className="yappie-card-body">
@@ -156,7 +160,6 @@ export function DashboardHome() {
               <Link
                 href="/chat/random"
                 className="yappie-card yappie-card-global"
-                onClick={() => trackEvent("global_mode_selected")}
               >
                 <div className="yappie-card-accent yappie-card-accent-global" />
                 <div className="yappie-card-body">
@@ -174,7 +177,6 @@ export function DashboardHome() {
               <Link
                 href="/confessions"
                 className="yappie-card yappie-card-confessions"
-                onClick={() => trackEvent("confessions_feed_viewed")}
               >
                 <div className="yappie-card-accent yappie-card-accent-confessions" />
                 <div className="yappie-card-body">

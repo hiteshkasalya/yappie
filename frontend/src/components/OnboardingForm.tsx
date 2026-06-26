@@ -2,10 +2,10 @@
 
 import { FormEvent, useState } from "react";
 import { authFetch, getStoredSession, saveStoredSession, clearStoredSession } from "@/lib/clientSession";
-import { ArrowRight, ChevronDown, Calendar, GraduationCap, ShieldCheck, MessageCircle } from "lucide-react";
 import { DashboardShell } from "./DashboardShell";
 import { trackEvent } from "@/lib/analytics";
 import { CollegeSelectorModal, COLLEGES } from "./CollegeSelectorModal";
+import { ChevronDown } from "lucide-react";
 
 export function OnboardingForm() {
   const [age, setAge] = useState("");
@@ -13,6 +13,7 @@ export function OnboardingForm() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
   async function handleOnboardSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
@@ -20,7 +21,7 @@ export function OnboardingForm() {
 
     const ageNum = parseInt(age, 10);
     if (isNaN(ageNum) || ageNum < 17 || ageNum > 80) {
-      setError("Please enter a valid age between 17 and 80.");
+      setError("Enter a valid age between 17 and 80.");
       setLoading(false);
       return;
     }
@@ -50,8 +51,10 @@ export function OnboardingForm() {
         saveStoredSession(session);
       }
 
-      trackEvent("sign_up", { method: "Google" });
-      trackEvent("profile_completed", { age: ageNum, college });
+      if (typeof window !== "undefined" && !localStorage.getItem("yappie_signup_tracked")) {
+        trackEvent("sign_up", { method: "Google", college });
+        localStorage.setItem("yappie_signup_tracked", "true");
+      }
 
       window.location.href = "/";
     } catch (err) {
@@ -65,67 +68,48 @@ export function OnboardingForm() {
 
   return (
     <DashboardShell>
-      <header className="yappie-header">
-        <div className="yappie-header-inner">
-          <div className="yappie-brand">
-            <div className="yappie-brand-mark">
-              <MessageCircle className="h-[18px] w-[18px] text-[#0C0C0E]" />
+      <div className="ob2-root">
+        <div className="ob2-center">
+          {/* Logo */}
+          <div className="ob2-logo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>yappie</span>
+          </div>
+
+          {/* Card */}
+          <div className="ob2-card">
+            <div className="ob2-heading">
+              <h1 className="ob2-title">One quick step</h1>
+              <p className="ob2-sub">So we can put you in the right campus stream.</p>
             </div>
-            <span className="yappie-brand-name">
-              yappie
-            </span>
-          </div>
-        </div>
-      </header>
 
-      <div className="yappie-onboard">
-        <div className="yappie-onboard-panel">
-          <div className="yappie-onboard-header">
-            <p className="yappie-auth-eyebrow">One last step</p>
-            <h2 className="yappie-auth-title">Profile details</h2>
-            <p className="yappie-auth-desc">
-              Set your age and campus so we can match you with the right stream.
-            </p>
-          </div>
-
-          <form onSubmit={handleOnboardSubmit} className="yappie-auth-form">
-            <div className="yappie-field">
-              <label className="yappie-field-label" htmlFor="onboard-age">
-                Your age
-              </label>
-              <div className="yappie-input-wrap">
-                <Calendar className="yappie-input-icon h-4 w-4" />
+            <form onSubmit={handleOnboardSubmit} className="ob2-form">
+              <div className="ob2-field">
+                <label className="ob2-label" htmlFor="ob-age">Age</label>
                 <input
-                  id="onboard-age"
+                  id="ob-age"
                   required
                   type="number"
                   min={17}
                   max={80}
                   value={age}
                   onChange={(e) => setAge(e.target.value)}
-                  className="yappie-input"
-                  placeholder="Enter your age"
+                  className="ob2-input"
+                  placeholder="20"
+                  autoComplete="off"
                 />
               </div>
-            </div>
 
-            <div className="yappie-field">
-              <label className="yappie-field-label">College / university</label>
-              <div className="relative">
+              <div className="ob2-field">
+                <label className="ob2-label">College</label>
                 <button
                   type="button"
                   onClick={() => setDropdownOpen(true)}
-                  className="yappie-select-trigger"
+                  className="ob2-select"
                 >
-                  <div className="yappie-select-trigger-inner">
-                    <GraduationCap className="h-4 w-4 shrink-0 text-[var(--text-3)]" />
-                    <span className="font-sans font-extrabold text-[13px] text-white tracking-normal leading-normal">
-                      {selectedCollege?.name}
-                    </span>
-                  </div>
-                  <ChevronDown className="h-4.5 w-4.5 shrink-0 text-[var(--text-3)]" />
+                  <span>{selectedCollege?.name ?? "Select college"}</span>
+                  <ChevronDown className="ob2-chevron" />
                 </button>
-
                 <CollegeSelectorModal
                   isOpen={dropdownOpen}
                   onClose={() => setDropdownOpen(false)}
@@ -133,28 +117,15 @@ export function OnboardingForm() {
                   onChange={(val) => setCollege(val)}
                 />
               </div>
-            </div>
 
-            {error && <div className="yappie-auth-error">{error}</div>}
+              {error && <p className="ob2-error">{error}</p>}
 
-            <button disabled={loading} type="submit" className="yappie-auth-submit">
-              {loading ? (
-                <>
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--bg)]/20 border-t-[var(--bg)]" />
-                  Connecting...
-                </>
-              ) : (
-                <>
-                  Enter campus stream
-                  <ArrowRight className="h-4 w-4" />
-                </>
-              )}
-            </button>
-          </form>
+              <button disabled={loading} type="submit" className="ob2-btn">
+                {loading ? <span className="ob2-spin" /> : "Continue"}
+              </button>
+            </form>
 
-          <div className="yappie-auth-footer">
-            <ShieldCheck className="h-3.5 w-3.5" />
-            Identity strictly anonymized
+            <p className="ob2-hint">Your real identity is never stored or shared.</p>
           </div>
         </div>
       </div>

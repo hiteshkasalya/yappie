@@ -14,6 +14,7 @@ import { getSocket } from "@/lib/socketClient";
 import { useAnonymousSession } from "@/hooks/useAnonymousSession";
 import type { ChatMessage, MatchMode, PublicUser } from "@/types";
 import { trackEvent } from "@/lib/analytics";
+import { COLLEGES } from "./CollegeSelectorModal";
 
 type MatchState = "idle" | "waiting" | "matched";
 
@@ -220,8 +221,8 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
       setState("matched");
       setStatus("");
       chatStartTimestampRef.current = Date.now();
-      trackEvent("chat_connected", { mode: "friend" });
-      trackEvent("chat_started", { mode: "friend" });
+      trackEvent("chat_connected", { chat_mode: "friend", college: sessionRef.current?.user?.college });
+      trackEvent("chat_started", { chat_mode: "friend", college: sessionRef.current?.user?.college });
     };
 
     const onMessage = (incoming: ChatMessage) => {
@@ -311,8 +312,8 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
       setMessages([sysMsg(`@${payload.peer.anonymousUsername.toLowerCase()} joined the chat`, payload.roomId)]);
 
       chatStartTimestampRef.current = Date.now();
-      trackEvent("chat_connected", { mode, peer_college: payload.peer.college });
-      trackEvent("chat_started", { mode, peer_college: payload.peer.college });
+      trackEvent("chat_connected", { chat_mode: mode === "random" ? "global" : mode, college: sessionRef.current?.user?.college, peer_college: payload.peer.college });
+      trackEvent("chat_started", { chat_mode: mode === "random" ? "global" : mode, college: sessionRef.current?.user?.college, peer_college: payload.peer.college });
     };
 
     const onEnded = () => {
@@ -326,7 +327,7 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
         ? Math.round((Date.now() - chatStartTimestampRef.current) / 1000)
         : 0;
       chatStartTimestampRef.current = null;
-      trackEvent("chat_completed", { mode, duration_seconds: duration, end_reason: "peer_left" });
+      trackEvent("chat_completed", { chat_mode: mode === "random" ? "global" : mode, college: sessionRef.current?.user?.college, duration_seconds: duration, end_reason: "peer_left" });
 
       if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
       reconnectTimerRef.current = setTimeout(() => {
@@ -337,7 +338,7 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
         setState("waiting");
         setStatus("finding someone new...");
         socket.emit("match:start", { mode });
-        trackEvent("queue_joined", { mode });
+        trackEvent("queue_joined", { chat_mode: mode === "random" ? "global" : mode, college: sessionRef.current?.user?.college });
       }, 2000);
     };
 
@@ -384,7 +385,7 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
       // Only re-queue if NOT currently in a matched chat
       if (stateRef.current !== "matched" && mode) {
         socket.emit("match:start", { mode });
-        trackEvent("queue_joined", { mode });
+        trackEvent("queue_joined", { chat_mode: mode === "random" ? "global" : mode, college: sessionRef.current?.user?.college });
       }
     };
 
@@ -401,8 +402,7 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
     // Initial match queue
     if (mode) {
       socket.emit("match:start", { mode });
-      trackEvent("queue_joined", { mode });
-      trackEvent(mode === "campus" ? "campus_mode_selected" : "global_mode_selected");
+      trackEvent("queue_joined", { chat_mode: mode === "random" ? "global" : mode, college: sessionRef.current?.user?.college });
       setState("waiting");
       setStatus(waitingCopy);
     }
@@ -412,13 +412,13 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
       mountedRef.current = false;
 
       if (stateRef.current === "waiting" && !friendId) {
-        trackEvent("queue_abandoned", { mode });
+        trackEvent("queue_abandoned", { chat_mode: mode === "random" ? "global" : mode, college: sessionRef.current?.user?.college });
       } else if (stateRef.current === "matched") {
         const duration = chatStartTimestampRef.current
           ? Math.round((Date.now() - chatStartTimestampRef.current) / 1000)
           : 0;
         chatStartTimestampRef.current = null;
-        trackEvent("chat_completed", { mode: friendId ? "friend" : mode, duration_seconds: duration, end_reason: "unmounted" });
+        trackEvent("chat_completed", { chat_mode: friendId ? "friend" : (mode === "random" ? "global" : mode), college: sessionRef.current?.user?.college, duration_seconds: duration, end_reason: "unmounted" });
       }
 
       socket.off("match:waiting", onWaiting);
@@ -460,14 +460,14 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
       : 0;
     chatStartTimestampRef.current = null;
     if (stateRef.current === "matched") {
-      trackEvent("chat_completed", { mode, duration_seconds: duration, end_reason: "skipped" });
+      trackEvent("chat_completed", { chat_mode: mode === "random" ? "global" : mode, college: sessionRef.current?.user?.college, duration_seconds: duration, end_reason: "skipped" });
     }
 
     if (reconnectTimerRef.current) { clearTimeout(reconnectTimerRef.current); reconnectTimerRef.current = null; }
     socket.emit("match:next");
     if (mode) {
       socket.emit("match:start", { mode });
-      trackEvent("queue_joined", { mode });
+      trackEvent("queue_joined", { chat_mode: mode === "random" ? "global" : mode, college: sessionRef.current?.user?.college });
     }
     setState("waiting"); setPeer(null); setRoomId(""); setMessages([]);
     setStatus(waitingCopy); setFriendshipStatus("none"); setFriendshipId(null);
@@ -611,11 +611,21 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
             <span className="sc-header-peer">
               {peer ? `@${peer.anonymousUsername.toLowerCase()}` : friendId ? "@loading..." : "@searching..."}
             </span>
-            {peer && (
-              <span className={peer.online ? "sc-header-online" : "sc-header-offline"} style={{ fontSize: "0.7rem", color: peer.online ? "#4ade80" : "rgba(255,255,255,0.45)" }}>
-                ● {peer.online ? "online" : "offline"}
-              </span>
-            )}
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
+              {peer && (
+                <span className={peer.online ? "sc-header-online" : "sc-header-offline"} style={{ fontSize: "0.7rem", color: peer.online ? "#4ade80" : "rgba(255,255,255,0.45)", display: "inline-flex", alignItems: "center" }}>
+                  ● {peer.online ? "online" : "offline"}
+                </span>
+              )}
+              {peer && peer.college && (
+                <>
+                  <span style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.25)" }}>•</span>
+                  <span className="sc-header-college" style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.45)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "160px" }}>
+                    {COLLEGES.find(c => c.id === peer.college)?.name || peer.college}
+                  </span>
+                </>
+              )}
+            </div>
           </div>
         </div>
 

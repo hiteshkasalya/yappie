@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /chat/
+Disallow: /friends/
+Disallow: /login/
+Disallow: /signup/
+Sitemap: https://yappie.in/sitemap.xml

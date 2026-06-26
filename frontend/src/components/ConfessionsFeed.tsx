@@ -124,7 +124,7 @@ export function ConfessionsFeed() {
           sessionStorage.setItem("yappie_confessions_list", JSON.stringify(updated));
           return updated;
         });
-        trackEvent("confession_posted", { college: session?.user?.college || "Other" });
+        trackEvent("confession_created", { college: session?.user?.college || "Other" });
       } else {
         setPostError(data.error || "Failed to post confession.");
       }
@@ -165,7 +165,7 @@ export function ConfessionsFeed() {
           sessionStorage.setItem("yappie_confessions_list", JSON.stringify(updated));
           return updated;
         });
-        trackEvent("confession_comment_posted", { confession_id: confessionId });
+        trackEvent("confession_replied", { confession_id: confessionId, college: session?.user?.college || "Other" });
       }
     } catch (err) {
       console.error("Failed to add comment:", err);

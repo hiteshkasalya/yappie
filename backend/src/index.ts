@@ -26,7 +26,6 @@ type AuthedSocket = Socket & {
     currentMode?: MatchMode;
     skippedPeers?: string[];
     blockedIds: Set<string>;
-    lastMessageTime?: number;
   };
 };
 

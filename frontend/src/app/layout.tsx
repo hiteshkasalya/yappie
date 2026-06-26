@@ -54,6 +54,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+<link rel="icon" href="/icon.svg" type="image/svg+xml" />
         {/* Google Analytics 4 Script */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-H5LHJMRGQP"
