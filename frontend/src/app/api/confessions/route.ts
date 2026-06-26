@@ -20,7 +20,9 @@ export async function GET(request: NextRequest) {
 
   try {
     // Explicitly exclude senderId and comments.senderId from the fetched documents to guarantee anonymity
-    const confessions = await Confession.find({ college }, { senderId: 0, "comments.senderId": 0 }).sort({ timestamp: -1 });
+    const confessions = await Confession.find({ college }, { senderId: 0, "comments.senderId": 0 })
+      .sort({ timestamp: -1 })
+      .limit(50);
     return Response.json({ confessions });
   } catch (err: any) {
     return Response.json({ error: err.message || "Failed to load confessions." }, { status: 500 });

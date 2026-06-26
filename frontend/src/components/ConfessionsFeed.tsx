@@ -67,11 +67,6 @@ export function ConfessionsFeed() {
   const [posting, setPosting] = useState(false);
   const [postError, setPostError] = useState("");
 
-  // Comment states indexed by confessionId
-  const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
-  const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
-  const [commentingId, setCommentingId] = useState<string | null>(null);
-
   const loadConfessions = useCallback(async () => {
     if (!session) return;
     const cached = sessionStorage.getItem("yappie_confessions_list");
@@ -154,93 +149,6 @@ export function ConfessionsFeed() {
     }
   };
 
-  const handleAddComment = async (e: FormEvent, confessionId: string) => {
-    e.preventDefault();
-    const commentText = commentInputs[confessionId]?.trim();
-    if (!commentText || commentingId) return;
-
-    const tempCommentId = `temp-comment-${Date.now()}`;
-    const optimisticComment: ConfessionComment = {
-      id: tempCommentId,
-      senderId: session?.user?.id || "temp-sender",
-      anonymousUsername: session?.user?.anonymousUsername || "anonymous",
-      message: commentText,
-      timestamp: new Date().toISOString()
-    };
-
-    // Optimistically clear input and add comment
-    setCommentInputs(prev => ({ ...prev, [confessionId]: "" }));
-    setCommentingId(confessionId);
-    setConfessions(current => {
-      return current.map(c => {
-        if (c._id === confessionId) {
-          return {
-            ...c,
-            comments: [...(c.comments || []), optimisticComment]
-          };
-        }
-        return c;
-      });
-    });
-
-    try {
-      const res = await authFetch(`/api/confessions/${confessionId}/comments`, {
-        method: "POST",
-        body: JSON.stringify({ message: commentText })
-      });
-      const data = await res.json();
-      if (res.ok && data.comment) {
-        setConfessions(current => {
-          const updated = current.map(c => {
-            if (c._id === confessionId) {
-              const cleanedComments = (c.comments || []).map(comm => 
-                comm.id === tempCommentId ? data.comment : comm
-              );
-              return {
-                ...c,
-                comments: cleanedComments
-              };
-            }
-            return c;
-          });
-          sessionStorage.setItem("yappie_confessions_list", JSON.stringify(updated));
-          return updated;
-        });
-        trackEvent("confession_replied", { confession_id: confessionId, college: session?.user?.college || "Other" });
-      } else {
-        // Rollback on server error
-        setConfessions(current => {
-          return current.map(c => {
-            if (c._id === confessionId) {
-              return {
-                ...c,
-                comments: (c.comments || []).filter(comm => comm.id !== tempCommentId)
-              };
-            }
-            return c;
-          });
-        });
-        setCommentInputs(prev => ({ ...prev, [confessionId]: commentText }));
-      }
-    } catch (err) {
-      // Rollback on network error
-      setConfessions(current => {
-        return current.map(c => {
-          if (c._id === confessionId) {
-            return {
-              ...c,
-              comments: (c.comments || []).filter(comm => comm.id !== tempCommentId)
-            };
-          }
-          return c;
-        });
-      });
-      setCommentInputs(prev => ({ ...prev, [confessionId]: commentText }));
-    } finally {
-      setCommentingId(null);
-    }
-  };
-
   const handleReportConfession = async (confession: Confession) => {
     const confirm = window.confirm("Report this confession for review?");
     if (!confirm) return;
@@ -262,13 +170,6 @@ export function ConfessionsFeed() {
     } catch {
       alert("Error submitting report.");
     }
-  };
-
-  const toggleComments = (confessionId: string) => {
-    setExpandedComments(prev => ({
-      ...prev,
-      [confessionId]: !prev[confessionId]
-    }));
   };
 
   if (!ready || !session) return <div className="yappie-app yappie-loading" />;
@@ -339,40 +240,43 @@ export function ConfessionsFeed() {
           ) : (
             <div className="conf-feed-list">
               {confessions.map((confession) => {
-                const isExpanded = !!expandedComments[confession._id];
                 const commentCount = confession.comments?.length || 0;
                 
                 return (
-                  <article key={confession._id} className="conf-item-card float-in">
+                  <article key={confession._id} className="conf-item-card float-in" style={{ cursor: "pointer" }}>
                     
-                    {/* Confession Card Header */}
-                    <div className="conf-item-header">
-                      <div className="conf-item-author-wrap">
-                        <span className="conf-item-author">@{confession.anonymousUsername.toLowerCase()}</span>
-                        <span className="conf-item-college-tag">
-                          {confession.college === "Other" ? "Global" : confession.college}
-                        </span>
+                    <Link href={`/confessions/${confession._id}`} className="block">
+                      {/* Confession Card Header */}
+                      <div className="conf-item-header">
+                        <div className="conf-item-author-wrap">
+                          <span className="conf-item-author">@{confession.anonymousUsername.toLowerCase()}</span>
+                          <span className="conf-item-college-tag">
+                            {confession.college === "Other" ? "Global" : confession.college}
+                          </span>
+                        </div>
+                        <span className="conf-item-time">{timeAgo(confession.timestamp)}</span>
                       </div>
-                      <span className="conf-item-time">{timeAgo(confession.timestamp)}</span>
-                    </div>
 
-                    {/* Content */}
-                    <p className="conf-item-message">{confession.message}</p>
+                      {/* Content */}
+                      <p className="conf-item-message">{confession.message}</p>
+                    </Link>
 
                     {/* Confession Card Footer */}
                     <div className="conf-item-footer">
-                      <button
-                        type="button"
-                        onClick={() => toggleComments(confession._id)}
+                      <Link
+                        href={`/confessions/${confession._id}`}
                         className="conf-footer-btn"
                       >
                         <MessageSquare className="h-3.5 w-3.5" />
                         <span>Comments ({commentCount})</span>
-                      </button>
+                      </Link>
 
                       <button
                         type="button"
-                        onClick={() => handleReportConfession(confession)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleReportConfession(confession);
+                        }}
                         className="conf-footer-btn hover:text-rose-400"
                         title="Report this post"
                       >
@@ -380,51 +284,6 @@ export function ConfessionsFeed() {
                         <span>Report</span>
                       </button>
                     </div>
-
-                    {/* Comments Drawer (Collapsible) */}
-                    {isExpanded && (
-                      <div className="conf-comments-section">
-                        {commentCount > 0 ? (
-                          confession.comments.map((comment) => (
-                            <div key={comment.id} className="conf-comment-row">
-                              <div className="conf-comment-meta">
-                                <span className="conf-comment-author">@{comment.anonymousUsername.toLowerCase()}</span>
-                                <span className="conf-comment-time">{timeAgo(comment.timestamp)}</span>
-                              </div>
-                              <p className="conf-comment-text">{comment.message}</p>
-                            </div>
-                          ))
-                        ) : (
-                          <p className="text-[10px] font-extrabold uppercase tracking-wider text-zinc-600 pl-2">No comments yet. Write one below!</p>
-                        )}
-
-                        {/* Add Comment Input Form */}
-                        <form
-                          onSubmit={(e) => handleAddComment(e, confession._id)}
-                          className="conf-comment-form"
-                        >
-                          <input
-                            type="text"
-                            placeholder="Write a reply..."
-                            value={commentInputs[confession._id] || ""}
-                            onChange={(e) =>
-                              setCommentInputs(prev => ({ ...prev, [confession._id]: e.target.value }))
-                            }
-                            maxLength={700}
-                            required
-                            className="conf-comment-input"
-                          />
-                          <button
-                            type="submit"
-                            disabled={!commentInputs[confession._id]?.trim() || commentingId === confession._id}
-                            className="conf-comment-submit"
-                            title="Post reply"
-                          >
-                            <Send className="h-3 w-3 stroke-[2.5]" />
-                          </button>
-                        </form>
-                      </div>
-                    )}
 
                   </article>
                 );
