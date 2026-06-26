@@ -146,6 +146,114 @@ export function JoinForm() {
           </div>
 
         </main>
+
+        {/* ==================== 3. FEATURES & SEO DETAILS ==================== */}
+        <section className="relative z-30 w-full max-w-7xl mx-auto px-5 py-16 sm:px-6 border-t border-white/5 mt-10" aria-label="Yappie Core Features">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="font-heading text-4xl sm:text-5xl font-black tracking-tight text-white mb-4 campus-glow-text">
+              The Ultimate Anonymous College Network
+            </h2>
+            <p className="text-slate-400 text-lg font-medium">
+              Yappie is designed specifically for students to share, chat, and connect without judgment or compromises on identity.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            
+            {/* Feature 1: Campus Chat / College Chat */}
+            <div className="group relative rounded-2xl border border-white/5 bg-[#0c0d12]/40 p-8 backdrop-blur-xl transition-all duration-300 hover:border-cyan-500/30 hover:shadow-[0_0_30px_rgba(34,211,238,0.1)]">
+              <div className="absolute -inset-px rounded-2xl bg-gradient-to-br from-cyan-500/10 to-violet-500/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="relative z-10">
+                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+                <h3 className="font-heading text-xl font-bold text-white mb-3">Campus Chat & College Chat</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  Join exclusive rooms scoped entirely to your college. Verify your domain and exchange thoughts, schedule study meets, or gossip with peers in a private <strong>Campus Chat</strong> space.
+                </p>
+              </div>
+            </div>
+
+            {/* Feature 2: Anonymous Confessions */}
+            <div className="group relative rounded-2xl border border-white/5 bg-[#0c0d12]/40 p-8 backdrop-blur-xl transition-all duration-300 hover:border-violet-500/30 hover:shadow-[0_0_30px_rgba(139,92,246,0.1)]">
+              <div className="absolute -inset-px rounded-2xl bg-gradient-to-br from-violet-500/10 to-fuchsia-500/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="relative z-10">
+                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-violet-500/10 text-violet-400 border border-violet-500/20">
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <h3 className="font-heading text-xl font-bold text-white mb-3">Anonymous Confessions</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  Got a secret you can&apos;t share on public feeds? Post to the <strong>Anonymous Confessions</strong> board for your college. Anonymity is guaranteed by stripping all personal records and IDs from our database.
+                </p>
+              </div>
+            </div>
+
+            {/* Feature 3: Anonymous Chat & Stranger Chat */}
+            <div className="group relative rounded-2xl border border-white/5 bg-[#0c0d12]/40 p-8 backdrop-blur-xl transition-all duration-300 hover:border-fuchsia-500/30 hover:shadow-[0_0_30px_rgba(217,70,239,0.1)]">
+              <div className="absolute -inset-px rounded-2xl bg-gradient-to-br from-fuchsia-500/10 to-cyan-500/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="relative z-10">
+                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/20">
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </div>
+                <h3 className="font-heading text-xl font-bold text-white mb-3">Anonymous Chat & Stranger Chat</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  Start an <strong>Anonymous Chat</strong> session instantly. Connect with a random peer or <strong>Stranger Chat</strong> user to make friends without disclosing your profile or personal details.
+                </p>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Quick FAQ / Detail section for AI Search Engines */}
+          <div className="mt-20 border-t border-white/5 pt-16">
+            <h2 className="font-heading text-3xl font-bold text-white mb-8 text-center campus-glow-text">
+              How Yappie Works for College Students
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl mx-auto text-left">
+              <div>
+                <h4 className="font-heading text-lg font-bold text-cyan-300 mb-2">Is Yappie really anonymous?</h4>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  Yes. Yappie assigns you a random username (like @user882) upon entry. All database entries are sanitized. Real IDs are stripped from API payloads, meaning inspect elements cannot reveal your true account credentials.
+                </p>
+              </div>
+              <div>
+                <h4 className="font-heading text-lg font-bold text-violet-300 mb-2">Can I chat with students from other colleges?</h4>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  Yappie offers both global room options for meeting students across different regions (like COEP, MIT-WPU, PICT, etc.) and exclusive private rooms reserved strictly for your campus members.
+                </p>
+              </div>
+              <div>
+                <h4 className="font-heading text-lg font-bold text-fuchsia-300 mb-2">Do I need to sign up?</h4>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  To ensure authentic student interactions and deter bots, we require a quick, one-click Google Sign-in. Your email domain is only used to assign you to your correct college page.
+                </p>
+              </div>
+              <div>
+                <h4 className="font-heading text-lg font-bold text-emerald-300 mb-2">What is the Anonymous Confessions feed?</h4>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  It is a digital wall for your university. You can read, write, and comment on campus gossip and secrets anonymously. Posts are strictly separated by college so you only see what is relevant to your campus.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ==================== 4. FOOTER ==================== */}
+        <footer className="relative z-30 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 border-t border-white/5 text-center sm:flex sm:items-center sm:justify-between">
+          <p className="text-xs text-slate-500">
+            &copy; {new Date().getFullYear()} Yappie. All rights reserved. Built anonymously for college students.
+          </p>
+          <nav className="mt-4 sm:mt-0 flex justify-center gap-6 text-xs text-slate-400 font-semibold" aria-label="Footer Navigation">
+            <Link href="/" className="hover:text-white transition">Home</Link>
+            <Link href="/about" className="hover:text-white transition">About</Link>
+          </nav>
+        </footer>
       </div>
     </div>
   );
