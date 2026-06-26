@@ -14,7 +14,17 @@ export function DashboardTabs({
   onProfileClick?: () => void;
   requestCount?: number;
 }) {
-  const [counts, setCounts] = useState({ pendingRequests: requestCount, unreadMessages: 0 });
+  const [counts, setCounts] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = sessionStorage.getItem("yappie_badge_counts");
+        if (cached) {
+          return JSON.parse(cached) as { pendingRequests: number; unreadMessages: number };
+        }
+      } catch {}
+    }
+    return { pendingRequests: requestCount, unreadMessages: 0 };
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -23,10 +33,12 @@ export function DashboardTabs({
         const res = await authFetch("/api/friends/badges");
         if (res.ok && mounted) {
           const data = await res.json() as { pendingRequests: number; unreadMessages: number };
-          setCounts({
+          const newCounts = {
             pendingRequests: data.pendingRequests ?? 0,
             unreadMessages: data.unreadMessages ?? 0,
-          });
+          };
+          setCounts(newCounts);
+          sessionStorage.setItem("yappie_badge_counts", JSON.stringify(newCounts));
         }
       } catch (err) {
         console.error("Failed to load badges:", err);
@@ -38,7 +50,7 @@ export function DashboardTabs({
       mounted = false;
       clearInterval(interval);
     };
-  }, []);
+  }, [requestCount]);
 
   const hasAlert = counts.pendingRequests > 0 || counts.unreadMessages > 0;
 
@@ -52,7 +64,7 @@ export function DashboardTabs({
           <Users className="h-[15px] w-[15px]" strokeWidth={2.2} />
           <span>Friends</span>
           {hasAlert && active !== "friends" && (
-            <span className="absolute -top-1 -right-2 h-2.5 w-2.5 rounded-full bg-[#ef4444] border-2 border-[#0C0C0E] shadow-[0_0_8px_#ef4444]" />
+            <span className="absolute -top-1 -right-2 h-2.5 w-2.5 rounded-full bg-[#ef4444] border-2 border-[#0C0C0E]" />
           )}
         </span>
       </Link>

@@ -1,0 +1,386 @@
+/* Confessions styling — consistent with premium monochrome dashboard */
+
+.conf-feed-root {
+  min-height: 100vh;
+  background-color: #07080a;
+  color: #f1f5f9;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.conf-feed-inner {
+  position: relative;
+  z-index: 10;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 4rem 1rem;
+}
+
+.conf-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.conf-title-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.conf-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  color: #ffffff;
+}
+
+.conf-subtitle {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #94a3b8;
+  margin-top: 0.125rem;
+}
+
+.conf-toggle-container {
+  display: flex;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 9999px;
+  padding: 0.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.conf-toggle-btn {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+  color: #94a3b8;
+  text-align: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.conf-toggle-btn-active {
+  background-color: #ffffff;
+  color: #07080a;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Post form container */
+.conf-form-card {
+  background-color: rgba(12, 13, 18, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  transition: border-color 0.3s ease;
+}
+
+.conf-form-card:focus-within {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.conf-textarea {
+  width: 100%;
+  min-height: 100px;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  font-size: 0.925rem;
+  font-weight: 500;
+  color: #f1f5f9;
+  placeholder-color: #475569;
+}
+
+.conf-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  padding-top: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.conf-char-counter {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.conf-scope-selector-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.conf-scope-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0.375rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.conf-scope-selector:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.conf-post-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #ffffff;
+  color: #07080a;
+  padding: 0.5rem 1.25rem;
+  border-radius: 9999px;
+  font-size: 0.825rem;
+  font-weight: 800;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.conf-post-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.conf-post-btn:active {
+  transform: translateY(0);
+}
+
+.conf-post-btn:disabled {
+  opacity: 0.3;
+  transform: none;
+  cursor: not-allowed;
+}
+
+/* Feed stream */
+.conf-feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.conf-item-card {
+  background-color: rgba(12, 13, 18, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.conf-item-card:hover {
+  border-color: rgba(255, 255, 255, 0.08);
+  background-color: rgba(12, 13, 18, 0.55);
+}
+
+.conf-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.conf-item-author-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.conf-item-author {
+  font-size: 0.825rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.conf-item-college-tag {
+  font-size: 0.675rem;
+  font-weight: 700;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+}
+
+.conf-item-time {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.conf-item-message {
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #cbd5e1;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.conf-item-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.03);
+  padding-top: 0.75rem;
+}
+
+.conf-footer-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #94a3b8;
+  transition: color 0.2s ease;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.conf-footer-btn:hover {
+  color: #ffffff;
+}
+
+/* Comments thread */
+.conf-comments-section {
+  margin-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.conf-comment-row {
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(255, 255, 255, 0.015);
+  border-left: 2px solid rgba(255, 255, 255, 0.1);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.conf-comment-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.conf-comment-author {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #e2e8f0;
+}
+
+.conf-comment-time {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.conf-comment-text {
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #cbd5e1;
+  word-break: break-word;
+}
+
+/* Add Comment form */
+.conf-comment-form {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 9999px;
+  padding: 0.25rem 0.25rem 0.25rem 0.75rem;
+}
+
+.conf-comment-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.conf-comment-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  width: 28px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  color: #07080a;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.conf-comment-submit:hover {
+  transform: scale(1.05);
+}
+
+.conf-comment-submit:disabled {
+  opacity: 0.3;
+  transform: none;
+  cursor: not-allowed;
+}
+
+.conf-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 0;
+  gap: 1rem;
+}
+
+.conf-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  border-top-color: #ffffff;
+  animation: conf-spin 0.8s linear infinite;
+}
+
+@keyframes conf-spin {
+  to { transform: rotate(360deg); }
+}
+
+.conf-empty {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 600;
+}

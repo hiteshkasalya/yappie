@@ -23,6 +23,7 @@ export type ChatMessage = {
   receiverId: string;
   message: string;
   timestamp: string;
+  status?: "sending" | "error" | "delivered";
 };
 
 export type FriendListItem = {
@@ -39,3 +40,22 @@ export type AdminStats = {
   activeChats: number;
   reports: number;
 };
+
+export type ConfessionComment = {
+  id: string;
+  senderId: string;
+  anonymousUsername: string;
+  message: string;
+  timestamp: string;
+};
+
+export type Confession = {
+  _id: string;
+  senderId: string;
+  anonymousUsername: string;
+  college: string;
+  message: string;
+  comments: ConfessionComment[];
+  timestamp: string;
+};
+

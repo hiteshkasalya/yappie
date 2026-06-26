@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { GoogleOAuthProvider, useGoogleLogin } from "@react-oauth/google";
 import { saveStoredSession } from "@/lib/clientSession";
 import { MessageCircle } from "lucide-react";
+import { trackEvent } from "@/lib/analytics";
 
 export function JoinForm() {
   const [error, setError] = useState("");
@@ -44,6 +45,7 @@ export function JoinForm() {
       const data = await res.json();
       if (res.ok && data.user) {
         saveStoredSession(data);
+        trackEvent("login", { method: "Google" });
         window.location.href = "/";
       } else {
         setError(data.error || "Google Login failed.");

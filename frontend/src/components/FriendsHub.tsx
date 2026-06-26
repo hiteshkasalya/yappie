@@ -44,8 +44,28 @@ function Avatar({ username, size = 44 }: { username: string; size?: number }) {
 export function FriendsHub() {
   const router = useRouter();
   const { session, ready } = useAnonymousSession();
-  const [friends, setFriends] = useState<FriendListItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [friends, setFriends] = useState<FriendListItem[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = sessionStorage.getItem("yappie_friends_list");
+        if (cached) {
+          return JSON.parse(cached) as FriendListItem[];
+        }
+      } catch (e) {
+        console.error("Failed to load friends from cache", e);
+      }
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = sessionStorage.getItem("yappie_friends_list");
+        if (cached) return false;
+      } catch {}
+    }
+    return true;
+  });
   const [search, setSearch] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -55,7 +75,9 @@ export function FriendsHub() {
       const res = await authFetch("/api/friends");
       if (res.ok) {
         const data = await res.json() as { friends: FriendListItem[] };
-        setFriends(data.friends ?? []);
+        const friendsList = data.friends ?? [];
+        setFriends(friendsList);
+        sessionStorage.setItem("yappie_friends_list", JSON.stringify(friendsList));
       }
     } catch (err) {
       console.error("Failed to load friends:", err);

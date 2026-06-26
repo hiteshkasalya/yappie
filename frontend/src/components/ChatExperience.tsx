@@ -13,6 +13,7 @@ import { authFetch } from "@/lib/clientSession";
 import { getSocket } from "@/lib/socketClient";
 import { useAnonymousSession } from "@/hooks/useAnonymousSession";
 import type { ChatMessage, MatchMode, PublicUser } from "@/types";
+import { trackEvent } from "@/lib/analytics";
 
 type MatchState = "idle" | "waiting" | "matched";
 
@@ -90,6 +91,7 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
   const rootRef = useRef<HTMLDivElement | null>(null);
   const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
   const mountedRef = useRef(false); // tracks whether THIS mount is alive
+  const chatStartTimestampRef = useRef<number | null>(null);
 
   // Refs so socket listeners always read latest values without re-subscribing
   const peerRef = useRef<PublicUser | null>(null);
@@ -191,11 +193,32 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
       setRoomId(payload.roomId);
       setState("matched");
       setStatus("");
+      chatStartTimestampRef.current = Date.now();
+      trackEvent("chat_connected", { mode: "friend" });
+      trackEvent("chat_started", { mode: "friend" });
     };
 
     const onMessage = (incoming: ChatMessage) => {
-      if (roomIdRef.current && incoming.roomId === roomIdRef.current) {
-        setMessages(cur => [...cur, incoming]);
+      const friendRoomId = friendId ? `friend:${[sessionRef.current?.user.id || "", friendId].sort().join(":")}` : "";
+      const isExpectedRoom = roomIdRef.current
+        ? incoming.roomId === roomIdRef.current
+        : (friendId && incoming.roomId === friendRoomId);
+
+      if (isExpectedRoom) {
+        setMessages(cur => {
+          if (incoming.senderId === sessionRef.current?.user.id) {
+            const idx = cur.findIndex(m => m.senderId === incoming.senderId && m.status === "sending" && m.message === incoming.message);
+            if (idx !== -1) {
+              const updated = [...cur];
+              updated[idx] = incoming;
+              return updated;
+            }
+          }
+          if (cur.some(m => m.id === incoming.id)) {
+            return cur;
+          }
+          return [...cur, incoming];
+        });
       }
     };
 
@@ -260,6 +283,10 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
       setFriendshipStatus("none"); setFriendshipId(null); setIncomingRequest(null);
       if (reconnectTimerRef.current) { clearTimeout(reconnectTimerRef.current); reconnectTimerRef.current = null; }
       setMessages([sysMsg(`@${payload.peer.anonymousUsername.toLowerCase()} joined the chat`, payload.roomId)]);
+
+      chatStartTimestampRef.current = Date.now();
+      trackEvent("chat_connected", { mode, peer_college: payload.peer.college });
+      trackEvent("chat_started", { mode, peer_college: payload.peer.college });
     };
 
     const onEnded = () => {
@@ -268,6 +295,12 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
       setMessages(prev => [...prev, sysMsg(`@${name} left the chat`)]);
       setIsChatEnded(true);
       setPeer(null);
+
+      const duration = chatStartTimestampRef.current
+        ? Math.round((Date.now() - chatStartTimestampRef.current) / 1000)
+        : 0;
+      chatStartTimestampRef.current = null;
+      trackEvent("chat_completed", { mode, duration_seconds: duration, end_reason: "peer_left" });
 
       if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
       reconnectTimerRef.current = setTimeout(() => {
@@ -278,12 +311,26 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
         setState("waiting");
         setStatus("finding someone new...");
         socket.emit("match:start", { mode });
+        trackEvent("queue_joined", { mode });
       }, 2000);
     };
 
     const onMessage = (incoming: ChatMessage) => {
       if (roomIdRef.current && incoming.roomId === roomIdRef.current) {
-        setMessages(cur => [...cur, incoming]);
+        setMessages(cur => {
+          if (incoming.senderId === sessionRef.current?.user.id) {
+            const idx = cur.findIndex(m => m.senderId === incoming.senderId && m.status === "sending" && m.message === incoming.message);
+            if (idx !== -1) {
+              const updated = [...cur];
+              updated[idx] = incoming;
+              return updated;
+            }
+          }
+          if (cur.some(m => m.id === incoming.id)) {
+            return cur;
+          }
+          return [...cur, incoming];
+        });
       }
     };
 
@@ -311,6 +358,7 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
       // Only re-queue if NOT currently in a matched chat
       if (stateRef.current !== "matched" && mode) {
         socket.emit("match:start", { mode });
+        trackEvent("queue_joined", { mode });
       }
     };
 
@@ -327,6 +375,8 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
     // Initial match queue
     if (mode) {
       socket.emit("match:start", { mode });
+      trackEvent("queue_joined", { mode });
+      trackEvent(mode === "campus" ? "campus_mode_selected" : "global_mode_selected");
       setState("waiting");
       setStatus(waitingCopy);
     }
@@ -334,6 +384,16 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
     return () => {
       // Mark this mount as dead BEFORE scheduling any async work
       mountedRef.current = false;
+
+      if (stateRef.current === "waiting" && !friendId) {
+        trackEvent("queue_abandoned", { mode });
+      } else if (stateRef.current === "matched") {
+        const duration = chatStartTimestampRef.current
+          ? Math.round((Date.now() - chatStartTimestampRef.current) / 1000)
+          : 0;
+        chatStartTimestampRef.current = null;
+        trackEvent("chat_completed", { mode: friendId ? "friend" : mode, duration_seconds: duration, end_reason: "unmounted" });
+      }
 
       socket.off("match:waiting", onWaiting);
       socket.off("match:found", onFound);
@@ -368,9 +428,21 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
     const sess = sessionRef.current;
     if (!sess) return;
     const socket = getSocket(sess);
+
+    const duration = chatStartTimestampRef.current
+      ? Math.round((Date.now() - chatStartTimestampRef.current) / 1000)
+      : 0;
+    chatStartTimestampRef.current = null;
+    if (stateRef.current === "matched") {
+      trackEvent("chat_completed", { mode, duration_seconds: duration, end_reason: "skipped" });
+    }
+
     if (reconnectTimerRef.current) { clearTimeout(reconnectTimerRef.current); reconnectTimerRef.current = null; }
     socket.emit("match:next");
-    if (mode) socket.emit("match:start", { mode });
+    if (mode) {
+      socket.emit("match:start", { mode });
+      trackEvent("queue_joined", { mode });
+    }
     setState("waiting"); setPeer(null); setRoomId(""); setMessages([]);
     setStatus(waitingCopy); setFriendshipStatus("none"); setFriendshipId(null);
     setIncomingRequest(null); setShowRequestMenu(false); setIsChatEnded(false);
@@ -381,14 +453,29 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
     if (e) e.preventDefault();
     const sess = sessionRef.current;
     const rid = roomIdRef.current;
-    if (!sess || !message.trim()) return;
+    const msgText = message.trim();
+    if (!sess || !msgText) return;
     const socket = getSocket(sess);
 
+    // Create optimistic message
+    const tempId = `temp-${Date.now()}-${Math.random()}`;
+    const tempMsg: ChatMessage = {
+      id: tempId,
+      roomId: rid || (friendId ? `friend:${[sess.user.id, friendId].sort().join(":")}` : ""),
+      senderId: sess.user.id,
+      receiverId: friendId || peerRef.current?.id || "",
+      message: msgText,
+      timestamp: new Date().toISOString(),
+      status: "sending"
+    };
+
+    setMessages(current => [...current, tempMsg]);
+
     if (friendId) {
-      socket.emit("friend:message", { friendId, message: message.trim() });
+      socket.emit("friend:message", { friendId, message: msgText });
       if (rid) socket.emit("chat:typing", { roomId: rid, isTyping: false });
     } else if (rid) {
-      socket.emit("chat:message", { roomId: rid, message: message.trim() });
+      socket.emit("chat:message", { roomId: rid, message: msgText });
       socket.emit("chat:typing", { roomId: rid, isTyping: false });
     }
     setMessage("");
@@ -461,7 +548,12 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
     const reason = window.prompt("Reason for reporting?");
     if (!reason) return;
     const res = await authFetch("/api/reports", { method: "POST", body: JSON.stringify({ reportedUserId: peer.id, reason }) });
-    setStatus(res.ok ? "Report submitted." : "Could not submit report.");
+    if (res.ok) {
+      setStatus("Report submitted.");
+      trackEvent("report_user", { reported_user_id: peer.id, reason });
+    } else {
+      setStatus("Could not submit report.");
+    }
   }
 
   /* ── Loading guard ───────────────────────────────────── */

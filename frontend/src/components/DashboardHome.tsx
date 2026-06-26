@@ -16,6 +16,7 @@ import { authFetch, getStoredSession, saveStoredSession } from "@/lib/clientSess
 import { OnboardingForm } from "./OnboardingForm";
 import { DashboardShell } from "./DashboardShell";
 import { DashboardTabs } from "./DashboardTabs";
+import { trackEvent } from "@/lib/analytics";
 
 function avatarHue(username: string): number {
   let hash = 0;
@@ -66,6 +67,7 @@ export function DashboardHome() {
         stored.user = data.user;
         saveStoredSession(stored);
       }
+      trackEvent("profile_completed", { age: ageNum, college: editCollege, edit_mode: "settings" });
       setShowSettings(false);
     } catch (err) {
       setEditError("Unable to connect to the server.");
@@ -129,7 +131,11 @@ export function DashboardHome() {
 
             <div className="yappie-cards">
               {session.user.college && session.user.college !== "Other" && (
-                <Link href="/chat/campus" className="yappie-card yappie-card-campus">
+                <Link
+                  href="/chat/campus"
+                  className="yappie-card yappie-card-campus"
+                  onClick={() => trackEvent("campus_mode_selected")}
+                >
                   <div className="yappie-card-accent" />
                   <div className="yappie-card-body">
                     <div className="yappie-card-text">
@@ -144,13 +150,35 @@ export function DashboardHome() {
                 </Link>
               )}
 
-              <Link href="/chat/random" className="yappie-card yappie-card-global">
+              <Link
+                href="/chat/random"
+                className="yappie-card yappie-card-global"
+                onClick={() => trackEvent("global_mode_selected")}
+              >
                 <div className="yappie-card-accent yappie-card-accent-global" />
                 <div className="yappie-card-body">
                   <div className="yappie-card-text">
                     <h2 className="yappie-card-title">Chat With Global</h2>
                     <p className="yappie-card-tag">Random · Worldwide</p>
                     <p className="yappie-card-desc">A stranger from anywhere. No filters.</p>
+                  </div>
+                  <div className="yappie-card-arrow yappie-card-arrow-global">
+                    <ArrowRight className="h-4 w-4" strokeWidth={2} />
+                  </div>
+                </div>
+              </Link>
+
+              <Link
+                href="/confessions"
+                className="yappie-card yappie-card-global"
+                onClick={() => trackEvent("confessions_feed_viewed")}
+              >
+                <div className="yappie-card-accent yappie-card-accent-confessions" />
+                <div className="yappie-card-body">
+                  <div className="yappie-card-text">
+                    <h2 className="yappie-card-title">Confessions Feed</h2>
+                    <p className="yappie-card-tag">Anonymous · 7 Days TTL</p>
+                    <p className="yappie-card-desc">Share and read anonymous secrets from campus & global.</p>
                   </div>
                   <div className="yappie-card-arrow yappie-card-arrow-global">
                     <ArrowRight className="h-4 w-4" strokeWidth={2} />

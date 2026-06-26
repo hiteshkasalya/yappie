@@ -4,6 +4,7 @@ import { FormEvent, useState, useRef, useEffect } from "react";
 import { authFetch, getStoredSession, saveStoredSession, clearStoredSession } from "@/lib/clientSession";
 import { ArrowRight, ChevronDown, Check, Calendar, GraduationCap, ShieldCheck, MessageCircle } from "lucide-react";
 import { DashboardShell } from "./DashboardShell";
+import { trackEvent } from "@/lib/analytics";
 
 const COLLEGES = [
   { id: "MIT WPU", name: "MIT-WPU", type: "Campus Hub" },
@@ -64,6 +65,9 @@ export function OnboardingForm() {
         session.user = data.user;
         saveStoredSession(session);
       }
+
+      trackEvent("sign_up", { method: "Google" });
+      trackEvent("profile_completed", { age: ageNum, college });
 
       window.location.href = "/";
     } catch (err) {

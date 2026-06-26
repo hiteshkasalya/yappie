@@ -35,6 +35,7 @@ import { useAnonymousSession } from "@/hooks/useAnonymousSession";
 import type { ChatMessage, MatchMode, PublicUser, FriendListItem } from "@/types";
 import { OnboardingForm } from "./OnboardingForm";
 import { HubBackgroundDecor } from "./HubBackgroundDecor";
+import { trackEvent } from "@/lib/analytics";
 
 type MatchState = "idle" | "waiting" | "matched";
 
@@ -745,6 +746,7 @@ export function YappieChatDashboard({
       });
       if (response.ok) {
         showToast("Peer reported successfully.", "success");
+        trackEvent("report_user", { reported_user_id: peer.id, reason: reportReason.trim() });
       } else {
         showToast("Failed to submit report.", "error");
       }
@@ -764,6 +766,7 @@ export function YappieChatDashboard({
       body: JSON.stringify({ blockedUserId: peer.id })
     });
     getSocket(session).emit("user:block", { blockedUserId: peer.id });
+    trackEvent("block_user", { blocked_user_id: peer.id });
     setPeer(null);
     setRoomId("");
     setMessages([]);
