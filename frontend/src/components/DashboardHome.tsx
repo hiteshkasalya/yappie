@@ -105,7 +105,7 @@ export function DashboardHome() {
               <MessageCircle className="h-[18px] w-[18px] text-[#0C0C0E]" />
             </div>
             <span className="yappie-brand-name">
-              yappie
+              Yappie
             </span>
           </div>
           <Link 

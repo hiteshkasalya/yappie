@@ -185,7 +185,7 @@
   font-size: 1.1rem;
   font-weight: 700;
   letter-spacing: -0.02em;
-  text-transform: lowercase;
+  text-transform: none;
   color: var(--text-1);
 }
 
