@@ -269,6 +269,10 @@ expressApp.use(cors({
 expressApp.use(express.json());
 expressApp.use(cookieParser());
 
+expressApp.get("/ping", (req, res) => {
+  res.json({ status: "ok" });
+});
+
 connectToDatabase().then(async () => {
   console.log("[Database] Connected. Resetting online statuses...");
   await User.updateMany({}, { isOnline: false });

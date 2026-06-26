@@ -7,7 +7,8 @@ import {
   LogOut,
   Settings,
   Shield,
-  MessageCircle
+  MessageCircle,
+  ChevronDown
 } from "lucide-react";
 import Link from "next/link";
 import { getSocket } from "@/lib/socketClient";
@@ -17,25 +18,13 @@ import { OnboardingForm } from "./OnboardingForm";
 import { DashboardShell } from "./DashboardShell";
 import { DashboardTabs } from "./DashboardTabs";
 import { trackEvent } from "@/lib/analytics";
+import { CollegeSelectorModal, COLLEGES } from "./CollegeSelectorModal";
 
 function avatarHue(username: string): number {
   let hash = 0;
   for (let i = 0; i < username.length; i++) hash = username.charCodeAt(i) + ((hash << 5) - hash);
   return Math.abs(hash) % 360;
 }
-
-const COLLEGES = [
-  { id: "MIT WPU", name: "MIT-WPU" },
-  { id: "COEP", name: "COEP Technological University" },
-  { id: "PICT", name: "Pune Institute of Computer Technology (PICT)" },
-  { id: "VIT Pune", name: "Vishwakarma Institute of Technology (VIT)" },
-  { id: "Symbiosis", name: "Symbiosis International University (SIU)" },
-  { id: "AIT Pune", name: "Army Institute of Technology (AIT)" },
-  { id: "DY Patil", name: "D. Y. Patil College of Engineering" },
-  { id: "Cummins", name: "Cummins College of Engineering" },
-  { id: "MITAOE", name: "MIT Academy of Engineering (MITAOE)" },
-  { id: "Other", name: "Other" }
-];
 
 export function DashboardHome() {
   const router = useRouter();
@@ -45,6 +34,7 @@ export function DashboardHome() {
 
   const [editAge, setEditAge] = useState("");
   const [editCollege, setEditCollege] = useState<string>("MIT WPU");
+  const [collegeModalOpen, setCollegeModalOpen] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState("");
 
@@ -129,7 +119,7 @@ export function DashboardHome() {
         </div>
       </header>
 
-      <main className="yappie-main">
+      <main className="yappie-main yappie-main-scroll">
         {!showProfile ? (
           <>
             <div className="yappie-hero">
@@ -259,18 +249,24 @@ export function DashboardHome() {
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <label className="text-[10px] font-bold uppercase tracking-wider opacity-60">College Hub</label>
-                      <select
-                        value={editCollege}
-                        onChange={(e) => setEditCollege(e.target.value as any)}
+                      <button
+                        type="button"
+                        onClick={() => setCollegeModalOpen(true)}
                         style={{ background: 'var(--surface-1)', border: '1px solid var(--border)', color: 'var(--text-1)' }}
-                        className="rounded-lg px-3 py-2 text-sm focus:outline-none transition-colors"
+                        className="rounded-lg px-3 py-2 text-sm flex items-center justify-between text-left transition-colors active:scale-[0.99]"
                       >
-                        {COLLEGES.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </select>
+                        <span className="font-sans font-bold text-xs truncate max-w-[220px]">
+                          {COLLEGES.find(c => c.id === editCollege)?.name || editCollege}
+                        </span>
+                        <ChevronDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
+                      </button>
+
+                      <CollegeSelectorModal
+                        isOpen={collegeModalOpen}
+                        onClose={() => setCollegeModalOpen(false)}
+                        selectedValue={editCollege}
+                        onChange={(val) => setEditCollege(val)}
+                      />
                     </div>
                     {editError && <p className="text-[11px] text-red-500 mt-1">{editError}</p>}
                     <button

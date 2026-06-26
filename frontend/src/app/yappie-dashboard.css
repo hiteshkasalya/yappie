@@ -1093,11 +1093,13 @@
 
 .yappie-auth-title {
   font-family: 'Outfit', sans-serif;
-  font-size: 1.75rem;
-  font-weight: 700;
+  font-size: 1.875rem;
+  font-weight: 900;
   letter-spacing: -0.03em;
-  color: var(--text-1);
   line-height: 1.1;
+  background: linear-gradient(135deg, #ffffff 40%, rgba(255, 255, 255, 0.6) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .yappie-auth-desc {
@@ -1233,17 +1235,19 @@
   gap: 0.75rem;
   padding: 0.875rem 1rem;
   border-radius: 0.75rem;
-  border: 1px solid var(--border);
-  background: var(--bg);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.35);
   color: var(--text-1);
   text-align: left;
   cursor: pointer;
-  transition: border-color 0.18s;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .yappie-select-trigger:hover,
 .yappie-select-trigger:focus {
-  border-color: var(--border-hi);
+  border-color: rgba(168, 85, 247, 0.4);
+  background: rgba(0, 0, 0, 0.55);
+  box-shadow: 0 0 14px rgba(168, 85, 247, 0.12);
   outline: none;
 }
 
@@ -1409,12 +1413,27 @@
 .yappie-onboard-panel {
   width: 100%;
   max-width: 24rem;
-  padding: 2rem;
-  border-radius: 1.25rem;
-  border: 1px solid var(--border);
-  background: linear-gradient(160deg, var(--surface-1) 0%, var(--bg) 100%);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  padding: 2.25rem 2rem;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(16, 17, 26, 0.75);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 32px 90px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   animation: yappie-fade-in-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  position: relative;
+  overflow: hidden;
+}
+
+.yappie-onboard-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899);
+  opacity: 0.85;
 }
 
 .yappie-onboard-header {

@@ -14,6 +14,10 @@ function Tracker() {
         page_path: url,
       });
     }
+
+    // Auto-ping the Render backend to wake it up / keep it warm on page load/navigation
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://yappie-72iy.onrender.com";
+    fetch(`${apiUrl}/ping`).catch(() => {});
   }, [pathname, searchParams]);
 
   return null;

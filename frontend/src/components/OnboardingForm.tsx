@@ -1,23 +1,11 @@
 "use client";
 
-import { FormEvent, useState, useRef, useEffect } from "react";
+import { FormEvent, useState } from "react";
 import { authFetch, getStoredSession, saveStoredSession, clearStoredSession } from "@/lib/clientSession";
-import { ArrowRight, ChevronDown, Check, Calendar, GraduationCap, ShieldCheck, MessageCircle } from "lucide-react";
+import { ArrowRight, ChevronDown, Calendar, GraduationCap, ShieldCheck, MessageCircle } from "lucide-react";
 import { DashboardShell } from "./DashboardShell";
 import { trackEvent } from "@/lib/analytics";
-
-const COLLEGES = [
-  { id: "MIT WPU", name: "MIT-WPU", type: "Campus Hub" },
-  { id: "COEP", name: "COEP Technological University", type: "Campus Hub" },
-  { id: "PICT", name: "Pune Institute of Computer Technology (PICT)", type: "Campus Hub" },
-  { id: "VIT Pune", name: "Vishwakarma Institute of Technology (VIT)", type: "Campus Hub" },
-  { id: "Symbiosis", name: "Symbiosis International University (SIU)", type: "Campus Hub" },
-  { id: "AIT Pune", name: "Army Institute of Technology (AIT)", type: "Campus Hub" },
-  { id: "DY Patil", name: "D. Y. Patil College of Engineering", type: "Campus Hub" },
-  { id: "Cummins", name: "Cummins College of Engineering", type: "Campus Hub" },
-  { id: "MITAOE", name: "MIT Academy of Engineering (MITAOE)", type: "Campus Hub" },
-  { id: "Other", name: "Other", type: "Global Stream" },
-];
+import { CollegeSelectorModal, COLLEGES } from "./CollegeSelectorModal";
 
 export function OnboardingForm() {
   const [age, setAge] = useState("");
@@ -25,18 +13,6 @@ export function OnboardingForm() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
   async function handleOnboardSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
@@ -133,49 +109,29 @@ export function OnboardingForm() {
               </div>
             </div>
 
-            <div className="yappie-field" ref={dropdownRef}>
+            <div className="yappie-field">
               <label className="yappie-field-label">College / university</label>
               <div className="relative">
                 <button
                   type="button"
-                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  onClick={() => setDropdownOpen(true)}
                   className="yappie-select-trigger"
                 >
                   <div className="yappie-select-trigger-inner">
                     <GraduationCap className="h-4 w-4 shrink-0 text-[var(--text-3)]" />
-                    <div>
-                      <p className="yappie-select-name">{selectedCollege?.name}</p>
-                      <p className="yappie-select-tag">{selectedCollege?.type}</p>
-                    </div>
+                    <span className="font-sans font-extrabold text-[13px] text-white tracking-normal leading-normal">
+                      {selectedCollege?.name}
+                    </span>
                   </div>
-                  <ChevronDown
-                    className={`h-4 w-4 shrink-0 text-[var(--text-3)] transition-transform duration-300 ${
-                      dropdownOpen ? "rotate-180" : ""
-                    }`}
-                  />
+                  <ChevronDown className="h-4.5 w-4.5 shrink-0 text-[var(--text-3)]" />
                 </button>
 
-                {dropdownOpen && (
-                  <div className="yappie-dropdown">
-                    {COLLEGES.map((c) => (
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => {
-                          setCollege(c.id);
-                          setDropdownOpen(false);
-                        }}
-                        className="yappie-dropdown-item"
-                      >
-                        <div>
-                          <p className="yappie-select-name">{c.name}</p>
-                          <p className="yappie-select-tag">{c.type}</p>
-                        </div>
-                        {college === c.id && <Check className="h-4 w-4 text-[var(--text-1)]" />}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                <CollegeSelectorModal
+                  isOpen={dropdownOpen}
+                  onClose={() => setDropdownOpen(false)}
+                  selectedValue={college}
+                  onChange={(val) => setCollege(val)}
+                />
               </div>
             </div>
 

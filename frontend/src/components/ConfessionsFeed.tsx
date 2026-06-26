@@ -39,8 +39,28 @@ export function ConfessionsFeed() {
   const router = useRouter();
   const { session, ready } = useAnonymousSession();
 
-  const [confessions, setConfessions] = useState<Confession[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [confessions, setConfessions] = useState<Confession[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = sessionStorage.getItem("yappie_confessions_list");
+        if (cached) {
+          return JSON.parse(cached) as Confession[];
+        }
+      } catch (e) {
+        console.error("Failed to load confessions from cache", e);
+      }
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = sessionStorage.getItem("yappie_confessions_list");
+        if (cached) return false;
+      } catch {}
+    }
+    return true;
+  });
   
   // Post form state
   const [message, setMessage] = useState("");
@@ -54,12 +74,17 @@ export function ConfessionsFeed() {
 
   const loadConfessions = useCallback(async () => {
     if (!session) return;
-    setLoading(true);
+    const cached = sessionStorage.getItem("yappie_confessions_list");
+    if (!cached) {
+      setLoading(true);
+    }
     try {
       const res = await authFetch("/api/confessions");
       if (res.ok) {
         const data = await res.json() as { confessions: Confession[] };
-        setConfessions(data.confessions ?? []);
+        const confessionsList = data.confessions ?? [];
+        setConfessions(confessionsList);
+        sessionStorage.setItem("yappie_confessions_list", JSON.stringify(confessionsList));
       }
     } catch (err) {
       console.error("Failed to load confessions:", err);
@@ -93,8 +118,12 @@ export function ConfessionsFeed() {
       const data = await res.json();
       if (res.ok && data.confession) {
         setMessage("");
-        // Prepend new confession to feed instantly
-        setConfessions(current => [data.confession, ...current]);
+        // Prepend new confession to feed instantly and update cache
+        setConfessions(current => {
+          const updated = [data.confession, ...current];
+          sessionStorage.setItem("yappie_confessions_list", JSON.stringify(updated));
+          return updated;
+        });
         trackEvent("confession_posted", { college: session?.user?.college || "Other" });
       } else {
         setPostError(data.error || "Failed to post confession.");
@@ -122,9 +151,9 @@ export function ConfessionsFeed() {
       if (res.ok && data.comment) {
         // Clear comment input
         setCommentInputs(prev => ({ ...prev, [confessionId]: "" }));
-        // Update confessions state with the new comment
-        setConfessions(current =>
-          current.map(c => {
+        // Update confessions state with the new comment and update cache
+        setConfessions(current => {
+          const updated = current.map(c => {
             if (c._id === confessionId) {
               return {
                 ...c,
@@ -132,8 +161,10 @@ export function ConfessionsFeed() {
               };
             }
             return c;
-          })
-        );
+          });
+          sessionStorage.setItem("yappie_confessions_list", JSON.stringify(updated));
+          return updated;
+        });
         trackEvent("confession_comment_posted", { confession_id: confessionId });
       }
     } catch (err) {

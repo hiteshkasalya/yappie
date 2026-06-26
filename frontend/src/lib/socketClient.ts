@@ -19,7 +19,7 @@ export function getSocket(session: StoredSession) {
       userId: session.user.id,
       token: session.token
     },
-    transports: ["websocket", "polling"]
+    transports: ["polling", "websocket"]
   });
 
   return socket;
