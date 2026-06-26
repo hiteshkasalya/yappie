@@ -100,7 +100,9 @@ export function JoinForm() {
             </h1>
 
             <p className="mb-8 max-w-lg text-base font-bold leading-8 text-slate-200/70 lg:text-lg">
-              Unfiltered campus chat. Connect and text chat with other students from your college instantly and anonymously.
+              Your trust matters. Your email and personal information are never visible to other users, and we never sell your data to third parties.
+              <br /><br />
+              So, relax and start your journey of making meaningful connections.
             </p>
           </div>
 
