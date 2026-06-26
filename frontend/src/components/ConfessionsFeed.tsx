@@ -107,29 +107,48 @@ export function ConfessionsFeed() {
     e.preventDefault();
     if (!message.trim() || posting) return;
 
+    const tempId = `temp-${Date.now()}`;
+    const optimisticConfession: Confession = {
+      _id: tempId,
+      senderId: session?.user?.id || "temp-sender",
+      anonymousUsername: session?.user?.anonymousUsername || "anonymous",
+      college: session?.user?.college || "Other",
+      message: message.trim(),
+      comments: [],
+      timestamp: new Date().toISOString()
+    };
+
+    // Optimistically update list and clear input
+    setConfessions(current => [optimisticConfession, ...current]);
+    const originalMessage = message;
+    setMessage("");
     setPosting(true);
     setPostError("");
 
     try {
       const res = await authFetch("/api/confessions", {
         method: "POST",
-        body: JSON.stringify({ message: message.trim() })
+        body: JSON.stringify({ message: originalMessage.trim() })
       });
       const data = await res.json();
       if (res.ok && data.confession) {
-        setMessage("");
-        // Prepend new confession to feed instantly and update cache
         setConfessions(current => {
-          const updated = [data.confession, ...current];
+          const updated = current.map(c => c._id === tempId ? data.confession : c);
           sessionStorage.setItem("yappie_confessions_list", JSON.stringify(updated));
           return updated;
         });
         trackEvent("confession_created", { college: session?.user?.college || "Other" });
       } else {
+        // Rollback
+        setConfessions(current => current.filter(c => c._id !== tempId));
         setPostError(data.error || "Failed to post confession.");
+        setMessage(originalMessage);
       }
     } catch (err) {
+      // Rollback
+      setConfessions(current => current.filter(c => c._id !== tempId));
       setPostError("Network error. Please try again.");
+      setMessage(originalMessage);
     } finally {
       setPosting(false);
     }
@@ -140,7 +159,29 @@ export function ConfessionsFeed() {
     const commentText = commentInputs[confessionId]?.trim();
     if (!commentText || commentingId) return;
 
+    const tempCommentId = `temp-comment-${Date.now()}`;
+    const optimisticComment: ConfessionComment = {
+      id: tempCommentId,
+      senderId: session?.user?.id || "temp-sender",
+      anonymousUsername: session?.user?.anonymousUsername || "anonymous",
+      message: commentText,
+      timestamp: new Date().toISOString()
+    };
+
+    // Optimistically clear input and add comment
+    setCommentInputs(prev => ({ ...prev, [confessionId]: "" }));
     setCommentingId(confessionId);
+    setConfessions(current => {
+      return current.map(c => {
+        if (c._id === confessionId) {
+          return {
+            ...c,
+            comments: [...(c.comments || []), optimisticComment]
+          };
+        }
+        return c;
+      });
+    });
 
     try {
       const res = await authFetch(`/api/confessions/${confessionId}/comments`, {
@@ -149,15 +190,15 @@ export function ConfessionsFeed() {
       });
       const data = await res.json();
       if (res.ok && data.comment) {
-        // Clear comment input
-        setCommentInputs(prev => ({ ...prev, [confessionId]: "" }));
-        // Update confessions state with the new comment and update cache
         setConfessions(current => {
           const updated = current.map(c => {
             if (c._id === confessionId) {
+              const cleanedComments = (c.comments || []).map(comm => 
+                comm.id === tempCommentId ? data.comment : comm
+              );
               return {
                 ...c,
-                comments: [...c.comments, data.comment]
+                comments: cleanedComments
               };
             }
             return c;
@@ -166,9 +207,35 @@ export function ConfessionsFeed() {
           return updated;
         });
         trackEvent("confession_replied", { confession_id: confessionId, college: session?.user?.college || "Other" });
+      } else {
+        // Rollback on server error
+        setConfessions(current => {
+          return current.map(c => {
+            if (c._id === confessionId) {
+              return {
+                ...c,
+                comments: (c.comments || []).filter(comm => comm.id !== tempCommentId)
+              };
+            }
+            return c;
+          });
+        });
+        setCommentInputs(prev => ({ ...prev, [confessionId]: commentText }));
       }
     } catch (err) {
-      console.error("Failed to add comment:", err);
+      // Rollback on network error
+      setConfessions(current => {
+        return current.map(c => {
+          if (c._id === confessionId) {
+            return {
+              ...c,
+              comments: (c.comments || []).filter(comm => comm.id !== tempCommentId)
+            };
+          }
+          return c;
+        });
+      });
+      setCommentInputs(prev => ({ ...prev, [confessionId]: commentText }));
     } finally {
       setCommentingId(null);
     }

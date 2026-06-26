@@ -110,9 +110,9 @@ export function DashboardHome() {
           </div>
           <Link 
             href="/about" 
-            className="font-sans text-xs font-extrabold text-zinc-500 hover:text-white transition-colors duration-200 lowercase tracking-tight"
+            className="font-sans text-xs font-extrabold text-zinc-500 hover:text-white transition-colors duration-200 tracking-tight"
           >
-            about
+            About
           </Link>
         </div>
 
@@ -182,7 +182,7 @@ export function DashboardHome() {
                 <div className="yappie-card-body">
                   <div className="yappie-card-text">
                     <h2 className="yappie-card-title">Confessions Feed</h2>
-                    <p className="yappie-card-tag">Anonymous · 7 Days TTL</p>
+                    <p className="yappie-card-tag">Anonymous</p>
                     <p className="yappie-card-desc">Share and read anonymous campus secrets.</p>
                   </div>
                   <div className="yappie-card-arrow yappie-card-arrow-global">
