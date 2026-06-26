@@ -590,12 +590,14 @@ io.on("connection", async (baseSocket) => {
   socket.on("friend:message", async ({ friendId, message }: { friendId: string; message: unknown }) => {
     const pairKey = createPairKey(userId, friendId);
     const roomId = `friend:${pairKey}`;
-    const friendship = await Friendship.findOne({ pairKey, status: "accepted" });
-    if (!friendship) {
-      socket.emit("chat:error", { message: "Friend chat is not available." });
-      return;
+    if (!socket.rooms.has(roomId)) {
+      const friendship = await Friendship.findOne({ pairKey, status: "accepted" });
+      if (!friendship) {
+        socket.emit("chat:error", { message: "Friend chat is not available." });
+        return;
+      }
+      socket.join(roomId);
     }
-    socket.join(roomId);
     await saveAndEmitMessage(io, socket, roomId, friendId, "friend", message);
   });
 

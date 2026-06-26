@@ -8,6 +8,14 @@ import { trackEvent } from "@/lib/analytics";
 
 const COLLEGES = [
   { id: "MIT WPU", name: "MIT-WPU", type: "Campus Hub" },
+  { id: "COEP", name: "COEP Technological University", type: "Campus Hub" },
+  { id: "PICT", name: "Pune Institute of Computer Technology (PICT)", type: "Campus Hub" },
+  { id: "VIT Pune", name: "Vishwakarma Institute of Technology (VIT)", type: "Campus Hub" },
+  { id: "Symbiosis", name: "Symbiosis International University (SIU)", type: "Campus Hub" },
+  { id: "AIT Pune", name: "Army Institute of Technology (AIT)", type: "Campus Hub" },
+  { id: "DY Patil", name: "D. Y. Patil College of Engineering", type: "Campus Hub" },
+  { id: "Cummins", name: "Cummins College of Engineering", type: "Campus Hub" },
+  { id: "MITAOE", name: "MIT Academy of Engineering (MITAOE)", type: "Campus Hub" },
   { id: "Other", name: "Other", type: "Global Stream" },
 ];
 

@@ -10,7 +10,6 @@ import {
   GraduationCap,
   MessageSquare,
   Send,
-  User,
   AlertTriangle
 } from "lucide-react";
 import { authFetch } from "@/lib/clientSession";
@@ -40,13 +39,11 @@ export function ConfessionsFeed() {
   const router = useRouter();
   const { session, ready } = useAnonymousSession();
 
-  const [feedType, setFeedType] = useState<"campus" | "global">("global");
   const [confessions, setConfessions] = useState<Confession[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Post form state
   const [message, setMessage] = useState("");
-  const [postScope, setPostScope] = useState<"campus" | "global">("global");
   const [posting, setPosting] = useState(false);
   const [postError, setPostError] = useState("");
 
@@ -55,19 +52,11 @@ export function ConfessionsFeed() {
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
   const [commentingId, setCommentingId] = useState<string | null>(null);
 
-  // Set default feed type to campus if user belongs to a specific college
-  useEffect(() => {
-    if (session?.user?.college && session.user.college !== "Other") {
-      setFeedType("campus");
-      setPostScope("campus");
-    }
-  }, [session]);
-
   const loadConfessions = useCallback(async () => {
     if (!session) return;
     setLoading(true);
     try {
-      const res = await authFetch(`/api/confessions?type=${feedType}`);
+      const res = await authFetch("/api/confessions");
       if (res.ok) {
         const data = await res.json() as { confessions: Confession[] };
         setConfessions(data.confessions ?? []);
@@ -77,7 +66,7 @@ export function ConfessionsFeed() {
     } finally {
       setLoading(false);
     }
-  }, [session, feedType]);
+  }, [session]);
 
   useEffect(() => {
     if (ready && !session) {
@@ -99,14 +88,14 @@ export function ConfessionsFeed() {
     try {
       const res = await authFetch("/api/confessions", {
         method: "POST",
-        body: JSON.stringify({ message: message.trim(), scope: postScope })
+        body: JSON.stringify({ message: message.trim() })
       });
       const data = await res.json();
       if (res.ok && data.confession) {
         setMessage("");
-        // Optimistically prepend or reload confessions
+        // Prepend new confession to feed instantly
         setConfessions(current => [data.confession, ...current]);
-        trackEvent("confession_posted", { scope: postScope });
+        trackEvent("confession_posted", { college: session?.user?.college || "Other" });
       } else {
         setPostError(data.error || "Failed to post confession.");
       }
@@ -162,7 +151,7 @@ export function ConfessionsFeed() {
       const res = await authFetch("/api/reports", {
         method: "POST",
         body: JSON.stringify({
-          reportedUserId: confession.senderId,
+          reportedUserId: confession.senderId, // backend will check this
           reason: `Reported Confession: "${confession.message.slice(0, 100)}..."`
         })
       });
@@ -189,7 +178,7 @@ export function ConfessionsFeed() {
     return <OnboardingForm />;
   }
 
-  const hasCampusAccess = session.user.college && session.user.college !== "Other";
+  const collegeDisplay = session.user.college === "Other" ? "Global Stream" : session.user.college;
 
   return (
     <DashboardShell>
@@ -203,35 +192,15 @@ export function ConfessionsFeed() {
             </Link>
             <div className="conf-title-wrap">
               <h1 className="conf-title">Confessions</h1>
-              <span className="conf-subtitle">Anonymous Stream</span>
+              <span className="conf-subtitle">{collegeDisplay}</span>
             </div>
           </header>
-
-          {/* Feed Filter Toggle (only visible to campus users) */}
-          {hasCampusAccess && (
-            <div className="conf-toggle-container">
-              <button
-                type="button"
-                onClick={() => setFeedType("campus")}
-                className={`conf-toggle-btn ${feedType === "campus" ? "conf-toggle-btn-active" : ""}`}
-              >
-                Campus Stream
-              </button>
-              <button
-                type="button"
-                onClick={() => setFeedType("global")}
-                className={`conf-toggle-btn ${feedType === "global" ? "conf-toggle-btn-active" : ""}`}
-              >
-                Global Stream
-              </button>
-            </div>
-          )}
 
           {/* Write Confession Area */}
           <form onSubmit={handlePostConfession} className="conf-form-card">
             <textarea
               className="conf-textarea"
-              placeholder={feedType === "campus" ? "Confess something to MIT-WPU students anonymously..." : "Share an anonymous secret with the world..."}
+              placeholder={`Confess something anonymously to ${collegeDisplay} students...`}
               value={message}
               onChange={e => setMessage(e.target.value)}
               maxLength={1000}
@@ -241,26 +210,6 @@ export function ConfessionsFeed() {
             <div className="conf-form-footer">
               <span className="conf-char-counter">{message.length}/1000</span>
               <div className="conf-scope-selector-wrap">
-                {hasCampusAccess && (
-                  <button
-                    type="button"
-                    onClick={() => setPostScope(prev => prev === "campus" ? "global" : "campus")}
-                    className="conf-scope-selector"
-                    title="Change posting destination"
-                  >
-                    {postScope === "campus" ? (
-                      <>
-                        <GraduationCap className="h-3.5 w-3.5" />
-                        <span>MIT-WPU</span>
-                      </>
-                    ) : (
-                      <>
-                        <Globe className="h-3.5 w-3.5" />
-                        <span>Global</span>
-                      </>
-                    )}
-                  </button>
-                )}
                 <button
                   type="submit"
                   disabled={posting || !message.trim()}
@@ -301,7 +250,7 @@ export function ConfessionsFeed() {
                     {/* Confession Card Header */}
                     <div className="conf-item-header">
                       <div className="conf-item-author-wrap">
-                        <span className="conf-item-author">@anonymous</span>
+                        <span className="conf-item-author">@{confession.anonymousUsername.toLowerCase()}</span>
                         <span className="conf-item-college-tag">
                           {confession.college === "Other" ? "Global" : confession.college}
                         </span>
@@ -341,7 +290,7 @@ export function ConfessionsFeed() {
                           confession.comments.map((comment) => (
                             <div key={comment.id} className="conf-comment-row">
                               <div className="conf-comment-meta">
-                                <span className="conf-comment-author">@anonymous</span>
+                                <span className="conf-comment-author">@{comment.anonymousUsername.toLowerCase()}</span>
                                 <span className="conf-comment-time">{timeAgo(comment.timestamp)}</span>
                               </div>
                               <p className="conf-comment-text">{comment.message}</p>

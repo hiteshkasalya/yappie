@@ -40,18 +40,26 @@ export async function POST(
     }
 
     const commentId = new mongoose.Types.ObjectId().toString();
-    const comment = {
+
+    // Push comment WITH senderId to the database for moderation/admin logs
+    confession.comments.push({
       id: commentId,
       senderId: user._id,
       anonymousUsername: user.anonymousUsername,
       message,
       timestamp: new Date()
-    };
-
-    confession.comments.push(comment);
+    });
     await confession.save();
 
-    return Response.json({ comment });
+    // Return comment WITHOUT senderId to the client to guarantee anonymity
+    const returnedComment = {
+      id: commentId,
+      anonymousUsername: user.anonymousUsername,
+      message,
+      timestamp: new Date()
+    };
+
+    return Response.json({ comment: returnedComment });
   } catch (err: any) {
     return Response.json({ error: err.message || "Failed to add comment." }, { status: 500 });
   }

@@ -142,28 +142,54 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
 
     async function loadFriendChat() {
       try {
-        // Fetch friend details
-        const friendsRes = await authFetch("/api/friends");
-        if (!friendsRes.ok) return;
-        const friendsData = await friendsRes.json() as { friends: any[] };
-        const currentFriend = friendsData.friends.find(
-          item => item.friend.id === friendId && item.status === "accepted"
-        );
-
-        if (!currentFriend) {
-          setStatus("Friend chat is not available.");
-          return;
+        // Try to load friend details from session storage cache first
+        let currentFriend: any = null;
+        if (typeof window !== "undefined") {
+          try {
+            const cached = sessionStorage.getItem("yappie_friends_list");
+            if (cached) {
+              const cachedFriends = JSON.parse(cached) as any[];
+              currentFriend = cachedFriends.find(
+                (item: any) => item.friend.id === friendId && item.status === "accepted"
+              );
+            }
+          } catch (e) {
+            console.error("Error reading friends cache:", e);
+          }
         }
 
-        if (active) {
+        // If found in cache, set peer immediately so user sees the header and input bar instantly!
+        if (currentFriend && active) {
           setPeer(currentFriend.friend);
           setFriendshipStatus("accepted");
           setFriendshipId(currentFriend.friendshipId);
         }
 
-        // Fetch message history
-        const historyRes = await authFetch(`/api/messages/friend/${friendId}`);
-        if (historyRes.ok && active) {
+        // Fetch friend details from network (if not in cache or to refresh status) and history in parallel
+        const [friendsRes, historyRes] = await Promise.all([
+          !currentFriend ? authFetch(`/api/friends?friendId=${friendId}`) : Promise.resolve(null),
+          authFetch(`/api/messages/friend/${friendId}`)
+        ]);
+
+        if (friendsRes && friendsRes.ok && active) {
+          const friendsData = await friendsRes.json() as { friends: any[] };
+          const networkFriend = friendsData.friends.find(
+            (item: any) => item.friend.id === friendId && item.status === "accepted"
+          );
+          if (networkFriend) {
+            setPeer(networkFriend.friend);
+            setFriendshipStatus("accepted");
+            setFriendshipId(networkFriend.friendshipId);
+          } else if (!currentFriend) {
+            setStatus("Friend chat is not available.");
+            return;
+          }
+        } else if (!friendsRes && !currentFriend && active) {
+          setStatus("Friend chat is not available.");
+          return;
+        }
+
+        if (historyRes && historyRes.ok && active) {
           const historyData = await historyRes.json() as { messages: ChatMessage[] };
           setMessages(historyData.messages ?? []);
         }

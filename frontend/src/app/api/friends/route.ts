@@ -21,10 +21,24 @@ export async function GET(request: NextRequest) {
 
   await connectToDatabase();
 
-  const friendships = await Friendship.find({
+  const searchFriendId = request.nextUrl.searchParams.get("friendId");
+
+  let query: any = {
     $or: [{ userId: user._id }, { friendId: user._id }],
     status: { $in: ["pending", "accepted"] }
-  }).sort({ updatedAt: -1 });
+  };
+
+  if (searchFriendId) {
+    query = {
+      $or: [
+        { userId: user._id, friendId: searchFriendId },
+        { userId: searchFriendId, friendId: user._id }
+      ],
+      status: { $in: ["pending", "accepted"] }
+    };
+  }
+
+  const friendships = await Friendship.find(query).sort({ updatedAt: -1 });
 
   const userIds = friendships.map((friendship) =>
     String(friendship.userId) === String(user._id) ? friendship.friendId : friendship.userId
@@ -32,12 +46,17 @@ export async function GET(request: NextRequest) {
   const users = await User.find({ _id: { $in: userIds } });
   const usersById = new Map(users.map((friend) => [String(friend._id), friend]));
 
-  // Query all unread messages for the current user
-  const unreadMessages = await Message.find({
+  // Query unread messages
+  const msgQuery: any = {
     receiverId: user._id,
     chatType: "friend",
     isRead: false
-  });
+  };
+  if (searchFriendId) {
+    msgQuery.senderId = searchFriendId;
+  }
+
+  const unreadMessages = await Message.find(msgQuery);
 
   const unreadCountBySender = new Map<string, number>();
   for (const msg of unreadMessages) {

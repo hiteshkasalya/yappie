@@ -5,8 +5,7 @@ import { connectToDatabase } from "@/lib/mongodb";
 import Confession from "@/models/Confession";
 
 const createConfessionSchema = z.object({
-  message: z.string().min(5, "Confession must be at least 5 characters").max(1000, "Confession cannot exceed 1000 characters"),
-  scope: z.enum(["campus", "global"])
+  message: z.string().min(5, "Confession must be at least 5 characters").max(1000, "Confession cannot exceed 1000 characters")
 });
 
 export async function GET(request: NextRequest) {
@@ -17,21 +16,11 @@ export async function GET(request: NextRequest) {
 
   await connectToDatabase();
 
-  const { searchParams } = new URL(request.url);
-  const type = searchParams.get("type") || "global"; // "campus" or "global"
-
-  let query: any = {};
-  if (type === "campus") {
-    if (!user.college || user.college === "Other") {
-      return Response.json({ error: "Campus feed is not available for your stream." }, { status: 400 });
-    }
-    query.college = user.college;
-  } else {
-    query.college = "Other";
-  }
+  const college = user.college || "Other";
 
   try {
-    const confessions = await Confession.find(query).sort({ timestamp: -1 });
+    // Explicitly exclude senderId and comments.senderId from the fetched documents to guarantee anonymity
+    const confessions = await Confession.find({ college }, { senderId: 0, "comments.senderId": 0 }).sort({ timestamp: -1 });
     return Response.json({ confessions });
   } catch (err: any) {
     return Response.json({ error: err.message || "Failed to load confessions." }, { status: 500 });
@@ -50,11 +39,11 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: errorMsg }, { status: 400 });
   }
 
-  const { message, scope } = payload.data;
+  const { message } = payload.data;
 
   await connectToDatabase();
 
-  const college = scope === "campus" ? (user.college || "Other") : "Other";
+  const college = user.college || "Other";
 
   try {
     const newConfession = await Confession.create({
@@ -65,7 +54,17 @@ export async function POST(request: NextRequest) {
       comments: []
     });
 
-    return Response.json({ confession: newConfession });
+    // Manually strip senderId from the returned payload
+    const returnedConfession = {
+      _id: newConfession._id,
+      anonymousUsername: newConfession.anonymousUsername,
+      college: newConfession.college,
+      message: newConfession.message,
+      comments: newConfession.comments,
+      timestamp: newConfession.timestamp
+    };
+
+    return Response.json({ confession: returnedConfession });
   } catch (err: any) {
     return Response.json({ error: err.message || "Failed to create confession." }, { status: 500 });
   }

@@ -24,6 +24,19 @@ function avatarHue(username: string): number {
   return Math.abs(hash) % 360;
 }
 
+const COLLEGES = [
+  { id: "MIT WPU", name: "MIT-WPU" },
+  { id: "COEP", name: "COEP Technological University" },
+  { id: "PICT", name: "Pune Institute of Computer Technology (PICT)" },
+  { id: "VIT Pune", name: "Vishwakarma Institute of Technology (VIT)" },
+  { id: "Symbiosis", name: "Symbiosis International University (SIU)" },
+  { id: "AIT Pune", name: "Army Institute of Technology (AIT)" },
+  { id: "DY Patil", name: "D. Y. Patil College of Engineering" },
+  { id: "Cummins", name: "Cummins College of Engineering" },
+  { id: "MITAOE", name: "MIT Academy of Engineering (MITAOE)" },
+  { id: "Other", name: "Other" }
+];
+
 export function DashboardHome() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -31,7 +44,7 @@ export function DashboardHome() {
   const [showSettings, setShowSettings] = useState(false);
 
   const [editAge, setEditAge] = useState("");
-  const [editCollege, setEditCollege] = useState<"MIT WPU" | "Other">("MIT WPU");
+  const [editCollege, setEditCollege] = useState<string>("MIT WPU");
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState("");
 
@@ -170,7 +183,7 @@ export function DashboardHome() {
 
               <Link
                 href="/confessions"
-                className="yappie-card yappie-card-global"
+                className="yappie-card yappie-card-confessions"
                 onClick={() => trackEvent("confessions_feed_viewed")}
               >
                 <div className="yappie-card-accent yappie-card-accent-confessions" />
@@ -178,7 +191,7 @@ export function DashboardHome() {
                   <div className="yappie-card-text">
                     <h2 className="yappie-card-title">Confessions Feed</h2>
                     <p className="yappie-card-tag">Anonymous · 7 Days TTL</p>
-                    <p className="yappie-card-desc">Share and read anonymous secrets from campus & global.</p>
+                    <p className="yappie-card-desc">Share and read anonymous campus secrets.</p>
                   </div>
                   <div className="yappie-card-arrow yappie-card-arrow-global">
                     <ArrowRight className="h-4 w-4" strokeWidth={2} />
@@ -252,8 +265,11 @@ export function DashboardHome() {
                         style={{ background: 'var(--surface-1)', border: '1px solid var(--border)', color: 'var(--text-1)' }}
                         className="rounded-lg px-3 py-2 text-sm focus:outline-none transition-colors"
                       >
-                        <option value="MIT WPU">MIT WPU</option>
-                        <option value="Other">Other</option>
+                        {COLLEGES.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}
+                          </option>
+                        ))}
                       </select>
                     </div>
                     {editError && <p className="text-[11px] text-red-500 mt-1">{editError}</p>}
