@@ -27,6 +27,7 @@ export async function connectToDatabase() {
     console.log(`[Database] Attempting connection to MongoDB Atlas...`);
 
     cache.promise = mongoose.connect(uri, {
+      dbName: "yappie",
       bufferCommands: false,
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 10000,

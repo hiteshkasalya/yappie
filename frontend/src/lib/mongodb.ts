@@ -31,6 +31,7 @@ export async function connectToDatabase() {
     console.log(`[Database] Attempting connection to primary MongoDB database...`);
 
     cache.promise = mongoose.connect(uri, {
+      dbName: "yappie",
       bufferCommands: false,
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 10000,
@@ -40,6 +41,7 @@ export async function connectToDatabase() {
       if (primaryUri !== atlasUri) {
         console.log(`[Database] 🔄 Falling back to known Atlas MongoDB...`);
         return mongoose.connect(atlasUri, {
+          dbName: "yappie",
           bufferCommands: false,
           maxPoolSize: 10,
           serverSelectionTimeoutMS: 10000,
@@ -48,6 +50,7 @@ export async function connectToDatabase() {
           console.warn(`[Database] ⚠️ Atlas fallback connection failed: ${err2.message || err2}`);
           console.log(`[Database] 🔄 Falling back to local MongoDB: ${localUri}`);
           return mongoose.connect(localUri, {
+            dbName: "yappie",
             bufferCommands: false,
             maxPoolSize: 10
           });
@@ -55,6 +58,7 @@ export async function connectToDatabase() {
       } else {
         console.log(`[Database] 🔄 Falling back to local MongoDB: ${localUri}`);
         return mongoose.connect(localUri, {
+          dbName: "yappie",
           bufferCommands: false,
           maxPoolSize: 10
         });
