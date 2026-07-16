@@ -346,6 +346,16 @@ expressApp.get("/api/debug/logs", (req, res) => {
   res.send(logBuffer.join("\n"));
 });
 
+// Database verification endpoint (sanitized)
+expressApp.get("/api/debug/db", (req, res) => {
+  const uri = process.env.MONGODB_URI || "";
+  const sanitized = uri.replace(/\/\/([^:]+):([^@]+)@/, "//***:***@");
+  res.json({
+    hasUri: !!uri,
+    sanitizedUri: sanitized
+  });
+});
+
 connectToDatabase().then(async () => {
   console.log("[Database] Connected. Resetting online statuses...");
   await User.updateMany({}, { isOnline: false });

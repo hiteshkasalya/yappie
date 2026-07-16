@@ -29,7 +29,7 @@ import {
   GraduationCap,
   LockKeyhole
 } from "lucide-react";
-import { authFetch } from "@/lib/clientSession";
+import { authFetch, clearStoredSession } from "@/lib/clientSession";
 import { getSocket, whenSocketReady } from "@/lib/socketClient";
 import { useAnonymousSession } from "@/hooks/useAnonymousSession";
 import type { ChatMessage, MatchMode, PublicUser, FriendListItem } from "@/types";
@@ -1167,6 +1167,7 @@ export function YappieChatDashboard({
                   onClick={() => {
                     const socket = getSocket(session);
                     socket.disconnect();
+                    clearStoredSession();
                     router.push("/");
                     setTimeout(() => window.location.reload(), 100);
                   }}
