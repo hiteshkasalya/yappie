@@ -10,7 +10,7 @@ import {
   Send
 } from "lucide-react";
 import { authFetch } from "@/lib/clientSession";
-import { getSocket } from "@/lib/socketClient";
+import { getSocket, whenSocketReady } from "@/lib/socketClient";
 import { useAnonymousSession } from "@/hooks/useAnonymousSession";
 import type { ChatMessage, MatchMode, PublicUser } from "@/types";
 import { trackEvent } from "@/lib/analytics";
@@ -381,9 +381,9 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
       setIncomingRequest(null);
     };
 
-    const onConnect = () => {
-      // Only re-queue if NOT currently in a matched chat
-      if (stateRef.current !== "matched" && mode) {
+    const onReconnect = () => {
+      // Re-queue after an established connection drops
+      if (stateRef.current !== "matched" && mode && mountedRef.current) {
         socket.emit("match:start", { mode });
         trackEvent("queue_joined", { chat_mode: mode === "random" ? "global" : mode, college: sessionRef.current?.user?.college });
       }
@@ -397,14 +397,18 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
     socket.on("chat:error", onError);
     socket.on("friend:request:received", onFriendReceived);
     socket.on("friend:request:accepted", onFriendAccepted);
-    socket.on("connect", onConnect);
+    socket.io.on("reconnect", onReconnect);
 
-    // Initial match queue
+    // Initial match queue — wait for socket to be fully connected first
     if (mode) {
-      socket.emit("match:start", { mode });
-      trackEvent("queue_joined", { chat_mode: mode === "random" ? "global" : mode, college: sessionRef.current?.user?.college });
       setState("waiting");
       setStatus(waitingCopy);
+      whenSocketReady(session).then((sock) => {
+        if (mountedRef.current && stateRef.current !== "matched") {
+          sock.emit("match:start", { mode });
+          trackEvent("queue_joined", { chat_mode: mode === "random" ? "global" : mode, college: sessionRef.current?.user?.college });
+        }
+      });
     }
 
     return () => {
@@ -429,7 +433,7 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
       socket.off("chat:error", onError);
       socket.off("friend:request:received", onFriendReceived);
       socket.off("friend:request:accepted", onFriendAccepted);
-      socket.off("connect", onConnect);
+      socket.io.off("reconnect", onReconnect);
 
       // Only emit match:next if this was a real unmount (not Strict Mode double-mount)
       // Use a short timer; if the component remounts within 100ms, it cancels this

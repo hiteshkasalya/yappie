@@ -418,7 +418,7 @@ export function YappieChatDashboard({
       } else if (startFriendId) {
         const targetFriend = friends.find(f => f.friend.id === startFriendId);
         if (targetFriend) {
-          setActiveTarget({ type: "friend", friendId: startFriendId, friendUser: targetFriend.friend });
+        setActiveTarget({ type: "friend", friendId: startFriendId, friendUser: targetFriend.friend });
           setShowMobileChat(true);
         }
       }
@@ -432,7 +432,7 @@ export function YappieChatDashboard({
 
     const socket = getSocket(session);
     const mode = activeTarget.mode;
-    let cancelled = false; // track if effect was cleaned up before socket connected
+    let cancelled = false;
 
     const handleWaiting = (payload: { message: string }) => {
       setMatchState("waiting");
@@ -502,9 +502,11 @@ export function YappieChatDashboard({
       setTimeout(() => setFriendCelebration(false), 4000);
     };
 
-    // Re-emit match:start if socket reconnects mid-session
+    // Re-queue after an established connection drops and reconnects
     const handleReconnect = () => {
-      if (!cancelled) socket.emit("match:start", { mode });
+      if (!cancelled) {
+        socket.emit("match:start", { mode });
+      }
     };
 
     socket.on("match:waiting", handleWaiting);
@@ -515,15 +517,18 @@ export function YappieChatDashboard({
     socket.on("chat:error", handleError);
     socket.on("friend:request:received", handleFriendRequestReceived);
     socket.on("friend:request:accepted", handleFriendRequestAccepted);
-    socket.on("connect", handleReconnect);
+    socket.io.on("reconnect", handleReconnect);
 
     setMatchState("waiting");
     setStatusText(waitingCopy(mode));
 
-    // Use whenSocketReady to guarantee match:start fires only AFTER the socket
-    // is fully connected and authenticated — eliminates the race condition
-    whenSocketReady(session).then((sock) => {
+    // whenSocketReady resolves exactly once on initial connect.
+    // It handles Render cold-start by waiting through connect_errors.
+    whenSocketReady(session, (msg) => {
+      if (!cancelled) setStatusText(msg);
+    }).then((sock) => {
       if (!cancelled) {
+        setStatusText(waitingCopy(mode));
         sock.emit("match:start", { mode });
       }
     });
@@ -538,8 +543,7 @@ export function YappieChatDashboard({
       socket.off("chat:error", handleError);
       socket.off("friend:request:received", handleFriendRequestReceived);
       socket.off("friend:request:accepted", handleFriendRequestAccepted);
-      socket.off("connect", handleReconnect);
-      // Only leave queue if we are actually waiting (not if already matched)
+      socket.io.off("reconnect", handleReconnect);
       socket.emit("match:leave");
     };
   }, [activeTarget, session, waitingCopy, loadFriends, playChatSound]);
