@@ -13,7 +13,8 @@ import {
 import Link from "next/link";
 import { getSocket } from "@/lib/socketClient";
 import { useAnonymousSession } from "@/hooks/useAnonymousSession";
-import { authFetch, getStoredSession, saveStoredSession } from "@/lib/clientSession";
+import { authFetch, getStoredSession, saveStoredSession, clearStoredSession } from "@/lib/clientSession";
+import { supabase } from "@/lib/supabaseClient";
 import { OnboardingForm } from "./OnboardingForm";
 import { DashboardShell } from "./DashboardShell";
 import { DashboardTabs } from "./DashboardTabs";
@@ -88,8 +89,20 @@ export function DashboardHome() {
     return <OnboardingForm />;
   }
 
-  function signOut() {
-    getSocket(session!).disconnect();
+  async function signOut() {
+    try {
+      if (session) {
+        getSocket(session).disconnect();
+      }
+    } catch (e) {
+      console.error("Socket disconnect failed:", e);
+    }
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.error("Supabase signout failed:", e);
+    }
+    clearStoredSession();
     router.push("/");
     setTimeout(() => window.location.reload(), 100);
   }

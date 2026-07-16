@@ -9,9 +9,10 @@ import {
   Check,
   Send
 } from "lucide-react";
-import { authFetch } from "@/lib/clientSession";
+import { authFetch, clearStoredSession } from "@/lib/clientSession";
 import { getSocket, whenSocketReady } from "@/lib/socketClient";
 import { useAnonymousSession } from "@/hooks/useAnonymousSession";
+import { supabase } from "@/lib/supabaseClient";
 import type { ChatMessage, MatchMode, PublicUser } from "@/types";
 import { trackEvent } from "@/lib/analytics";
 import { COLLEGES } from "./CollegeSelectorModal";
@@ -680,15 +681,41 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
       {/* ── MAIN ── */}
       <main className="sc-main">
         {state === "waiting" ? (
-          <div className="sc-waiting">
-            <div className="sc-elegant-loader">
-              <div className="sc-elegant-orb" />
-              <div className="sc-elegant-ring" />
-            </div>
+          <div className="sc-waiting flex flex-col items-center justify-center">
+            {!status.toLowerCase().includes("failed") && (
+              <div className="sc-elegant-loader mb-4">
+                <div className="sc-elegant-orb" />
+                <div className="sc-elegant-ring" />
+              </div>
+            )}
             <h2 className="sc-waiting-title">
               {mode === "campus" ? "connecting to campus" : "connecting to a peer"}
             </h2>
-            <p className="sc-waiting-sub">{status.toLowerCase()}</p>
+            <p className="sc-waiting-sub mb-4" style={{ maxWidth: '300px', textAlign: 'center' }}>
+              {status.toLowerCase()}
+            </p>
+
+            {status.toLowerCase().includes("failed") && (
+              <button
+                onClick={async () => {
+                  try {
+                    if (session) {
+                      const socket = getSocket(session);
+                      socket.disconnect();
+                    }
+                  } catch (e) {}
+                  try {
+                    await supabase.auth.signOut();
+                  } catch (e) {}
+                  clearStoredSession();
+                  router.push("/");
+                  setTimeout(() => window.location.reload(), 100);
+                }}
+                className="mt-4 px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs tracking-wider transition active:scale-95 shadow-md uppercase"
+              >
+                Reset Session & Sign Out
+              </button>
+            )}
           </div>
         ) : (
           <div className="sc-chat-area">
