@@ -531,6 +531,11 @@ export function YappieChatDashboard({
         setStatusText(waitingCopy(mode));
         sock.emit("match:start", { mode });
       }
+    }).catch((err) => {
+      if (!cancelled) {
+        setStatusText("Authentication failed. Please sign out and sign in again.");
+        showToast("Socket authentication failed: " + err.message, "error");
+      }
     });
 
     return () => {

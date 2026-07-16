@@ -53,7 +53,7 @@ export function whenSocketReady(
     return Promise.resolve(sock);
   }
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     let resolved = false;
 
     const onConnect = () => {
@@ -65,6 +65,20 @@ export function whenSocketReady(
     };
 
     const onError = (err: Error) => {
+      const isAuthError = 
+        err.message.toLowerCase().includes("auth") || 
+        err.message.toLowerCase().includes("token") || 
+        err.message.toLowerCase().includes("user not found");
+
+      if (isAuthError) {
+        if (resolved) return;
+        resolved = true;
+        sock.off("connect", onConnect);
+        sock.off("connect_error", onError);
+        reject(new Error(err.message));
+        return;
+      }
+
       // Render cold start — backend is waking up, keep waiting
       if (onStatus) {
         onStatus("Waking up server... please wait a moment");

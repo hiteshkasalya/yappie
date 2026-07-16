@@ -408,6 +408,10 @@ export function ChatExperience({ mode, friendId }: { mode?: MatchMode; friendId?
           sock.emit("match:start", { mode });
           trackEvent("queue_joined", { chat_mode: mode === "random" ? "global" : mode, college: sessionRef.current?.user?.college });
         }
+      }).catch((err) => {
+        if (mountedRef.current) {
+          setStatus("Authentication failed: " + err.message + ". Please sign out and sign in again.");
+        }
       });
     }
 
