@@ -289,7 +289,25 @@ expressApp.use(express.json());
 expressApp.use(cookieParser());
 
 expressApp.get("/ping", (req, res) => {
-  res.json({ status: "ok" });
+  res.json({ status: "ok", time: new Date().toISOString() });
+});
+
+// Debug endpoint: shows live queue state (safe — no private data exposed)
+expressApp.get("/api/debug/queues", (req, res) => {
+  const randomQueue = Array.from(waitingRandom).map(u => ({ userId: u.userId.slice(-6), socketId: u.socketId.slice(-6), college: u.college }));
+  const campusQueues: Record<string, any[]> = {};
+  for (const [college, queue] of waitingCampus) {
+    campusQueues[college] = Array.from(queue).map(u => ({ userId: u.userId.slice(-6), socketId: u.socketId.slice(-6) }));
+  }
+  const rooms = Array.from(activeRooms.values()).map(r => ({ roomId: r.roomId.slice(-12), mode: r.mode, users: r.users.map(u => u.slice(-6)) }));
+  res.json({
+    connectedSockets: io.sockets.sockets.size,
+    onlineUsers: runtimeStats.onlineUserIds.size,
+    waitingRandom: randomQueue,
+    waitingCampus: campusQueues,
+    activeRooms: rooms,
+    activeChats: runtimeStats.activeChats
+  });
 });
 
 connectToDatabase().then(async () => {
@@ -481,11 +499,14 @@ io.on("connection", async (baseSocket) => {
         queue = new Set();
         if (mode === "campus") waitingCampus.set(waitingUser.college, queue);
       }
+
+      console.log(`[match:start] user=${userId.slice(-6)} mode=${mode} college=${waitingUser.college} queueSize=${queue.size} totalRandom=${waitingRandom.size}`);
       
       const candidate = findMatch(io, waitingUser, queue);
 
       if (!candidate) {
         queue.add(waitingUser);
+        console.log(`[match:start] no match — queued user=${userId.slice(-6)} queueNow=${queue.size}`);
         socket.emit("match:waiting", {
           mode,
           message: mode === "campus" ? "No one from your college is online right now." : "Looking for a stranger..."
@@ -499,6 +520,7 @@ io.on("connection", async (baseSocket) => {
 
       if (!candidateSocket || !peer || !currentUser) {
         // Candidate socket disappeared between findMatch and here — put current user in queue
+        console.log(`[match:start] candidate socket gone — re-queuing user=${userId.slice(-6)}`);
         queue.add(waitingUser);
         socket.emit("match:waiting", {
           mode,
@@ -519,8 +541,10 @@ io.on("connection", async (baseSocket) => {
       candidateSocket.data.currentRoom = roomId;
       candidateSocket.data.currentMode = mode;
 
+      console.log(`[match:found] ${userId.slice(-6)} <-> ${candidate.userId.slice(-6)} mode=${mode} room=${roomId.slice(-12)}`);
       socket.emit("match:found", { roomId, peer, mode });
       candidateSocket.emit("match:found", { roomId, peer: currentUser, mode });
+      console.log(`[match:done] both users notified, activeRooms=${activeRooms.size}`);
     } catch (err) {
       console.error("Error in match:start:", err);
       socket.emit("match:error", { message: "An error occurred while finding a match." });

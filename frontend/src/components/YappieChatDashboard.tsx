@@ -30,7 +30,7 @@ import {
   LockKeyhole
 } from "lucide-react";
 import { authFetch } from "@/lib/clientSession";
-import { getSocket } from "@/lib/socketClient";
+import { getSocket, whenSocketReady } from "@/lib/socketClient";
 import { useAnonymousSession } from "@/hooks/useAnonymousSession";
 import type { ChatMessage, MatchMode, PublicUser, FriendListItem } from "@/types";
 import { OnboardingForm } from "./OnboardingForm";
@@ -432,6 +432,7 @@ export function YappieChatDashboard({
 
     const socket = getSocket(session);
     const mode = activeTarget.mode;
+    let cancelled = false; // track if effect was cleaned up before socket connected
 
     const handleWaiting = (payload: { message: string }) => {
       setMatchState("waiting");
@@ -501,6 +502,11 @@ export function YappieChatDashboard({
       setTimeout(() => setFriendCelebration(false), 4000);
     };
 
+    // Re-emit match:start if socket reconnects mid-session
+    const handleReconnect = () => {
+      if (!cancelled) socket.emit("match:start", { mode });
+    };
+
     socket.on("match:waiting", handleWaiting);
     socket.on("match:found", handleFound);
     socket.on("match:ended", handleEnded);
@@ -509,25 +515,21 @@ export function YappieChatDashboard({
     socket.on("chat:error", handleError);
     socket.on("friend:request:received", handleFriendRequestReceived);
     socket.on("friend:request:accepted", handleFriendRequestAccepted);
-
-    // Re-emit match:start if socket reconnects (e.g., after brief network blip or ws upgrade)
-    const handleReconnect = () => {
-      socket.emit("match:start", { mode });
-    };
     socket.on("connect", handleReconnect);
 
-    // Emit immediately (socket may already be connected)
-    if (socket.connected) {
-      socket.emit("match:start", { mode });
-    } else {
-      // Will be emitted by handleReconnect when connect fires
-      setMatchState("waiting");
-      setStatusText(waitingCopy(mode));
-    }
     setMatchState("waiting");
     setStatusText(waitingCopy(mode));
 
+    // Use whenSocketReady to guarantee match:start fires only AFTER the socket
+    // is fully connected and authenticated — eliminates the race condition
+    whenSocketReady(session).then((sock) => {
+      if (!cancelled) {
+        sock.emit("match:start", { mode });
+      }
+    });
+
     return () => {
+      cancelled = true;
       socket.off("match:waiting", handleWaiting);
       socket.off("match:found", handleFound);
       socket.off("match:ended", handleEnded);
@@ -537,7 +539,8 @@ export function YappieChatDashboard({
       socket.off("friend:request:received", handleFriendRequestReceived);
       socket.off("friend:request:accepted", handleFriendRequestAccepted);
       socket.off("connect", handleReconnect);
-      socket.emit("match:next");
+      // Only leave queue if we are actually waiting (not if already matched)
+      socket.emit("match:leave");
     };
   }, [activeTarget, session, waitingCopy, loadFriends, playChatSound]);
 
