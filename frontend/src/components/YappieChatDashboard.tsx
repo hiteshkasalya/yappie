@@ -32,6 +32,7 @@ import {
 import { authFetch, clearStoredSession } from "@/lib/clientSession";
 import { getSocket, whenSocketReady } from "@/lib/socketClient";
 import { useAnonymousSession } from "@/hooks/useAnonymousSession";
+import { supabase } from "@/lib/supabaseClient";
 import type { ChatMessage, MatchMode, PublicUser, FriendListItem } from "@/types";
 import { OnboardingForm } from "./OnboardingForm";
 import { HubBackgroundDecor } from "./HubBackgroundDecor";
@@ -1164,9 +1165,20 @@ export function YappieChatDashboard({
                   <Settings className="h-4 w-4" />
                 </button>
                 <button
-                  onClick={() => {
-                    const socket = getSocket(session);
-                    socket.disconnect();
+                  onClick={async () => {
+                    try {
+                      if (session) {
+                        const socket = getSocket(session);
+                        socket.disconnect();
+                      }
+                    } catch (e) {
+                      console.error("Socket disconnect failed:", e);
+                    }
+                    try {
+                      await supabase.auth.signOut();
+                    } catch (e) {
+                      console.error("Supabase signout failed:", e);
+                    }
                     clearStoredSession();
                     router.push("/");
                     setTimeout(() => window.location.reload(), 100);
@@ -1367,11 +1379,33 @@ export function YappieChatDashboard({
                       </h3>
                       <div className="h-12 flex flex-col justify-center mb-6">
                         <p className="text-zinc-400 font-semibold text-[11px] max-w-[280px] leading-relaxed mb-2">
-                          {activeTarget.mode === "campus"
+                          {statusText || (activeTarget.mode === "campus"
                             ? "Looking for peers at your university..."
-                            : "Establishing secure link to global strangers..."}
+                            : "Establishing secure link to global strangers...")}
                         </p>
                       </div>
+
+                      {statusText.toLowerCase().includes("failed") && (
+                        <button
+                          onClick={async () => {
+                            try {
+                              if (session) {
+                                const socket = getSocket(session);
+                                socket.disconnect();
+                              }
+                            } catch (e) {}
+                            try {
+                              await supabase.auth.signOut();
+                            } catch (e) {}
+                            clearStoredSession();
+                            router.push("/");
+                            setTimeout(() => window.location.reload(), 100);
+                          }}
+                          className="mb-6 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs px-6 py-2.5 transition active:scale-95 shadow-md"
+                        >
+                          Reset Session & Sign Out
+                        </button>
+                      )}
 
                       {/* Log console container */}
                       <div className="w-full max-w-sm bg-zinc-950/80 text-left rounded-xl p-3 border border-zinc-800/80 shadow-layered-md font-mono text-[9px] text-zinc-400 select-none mb-8">
