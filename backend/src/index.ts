@@ -8,6 +8,36 @@ import { OAuth2Client } from "google-auth-library";
 
 import crypto from "crypto";
 import { Server, Socket } from "socket.io";
+
+// Real-time console log buffer for live diagnostics
+export const logBuffer: string[] = [];
+const originalLog = console.log;
+const originalWarn = console.warn;
+const originalError = console.error;
+
+function formatLog(type: string, args: any[]) {
+  const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ');
+  const time = new Date().toISOString();
+  return `[${time}] [${type}] ${message}`;
+}
+
+console.log = (...args: any[]) => {
+  logBuffer.push(formatLog('INFO', args));
+  if (logBuffer.length > 150) logBuffer.shift();
+  originalLog.apply(console, args);
+};
+
+console.warn = (...args: any[]) => {
+  logBuffer.push(formatLog('WARN', args));
+  if (logBuffer.length > 150) logBuffer.shift();
+  originalWarn.apply(console, args);
+};
+
+console.error = (...args: any[]) => {
+  logBuffer.push(formatLog('ERROR', args));
+  if (logBuffer.length > 150) logBuffer.shift();
+  originalError.apply(console, args);
+};
 import { createPairKey } from "./lib/pairKey";
 import { cleanMessage, isMessageTooLong, isTextOnlyPayload } from "./lib/safety";
 import { connectToDatabase } from "./lib/mongodb";
@@ -310,6 +340,12 @@ expressApp.get("/api/debug/queues", (req, res) => {
   });
 });
 
+// Logs endpoint: returns buffered console logs for live debugging
+expressApp.get("/api/debug/logs", (req, res) => {
+  res.setHeader("Content-Type", "text/plain");
+  res.send(logBuffer.join("\n"));
+});
+
 connectToDatabase().then(async () => {
   console.log("[Database] Connected. Resetting online statuses...");
   await User.updateMany({}, { isOnline: false });
@@ -451,18 +487,29 @@ const io = new Server(server, {
 io.use(async (socket, nextMiddleware) => {
   try {
     const token = socket.handshake.auth.token;
-    if (!token) return nextMiddleware(new Error("Authentication token is missing"));
+    const userId = socket.handshake.auth.userId;
+    console.log(`[socket:auth:start] socketId=${socket.id} userId=${userId}`);
+    
+    if (!token) {
+      console.warn(`[socket:auth:fail] Authentication token is missing for socketId=${socket.id}`);
+      return nextMiddleware(new Error("Authentication token is missing"));
+    }
 
     const decoded = jwt.verify(token, JWT_SECRET) as { internalId: string };
     
     await connectToDatabase();
     const user = await User.findById(decoded.internalId);
-    if (!user) return nextMiddleware(new Error("User not found"));
+    if (!user) {
+      console.warn(`[socket:auth:fail] User not found for internalId=${decoded.internalId}`);
+      return nextMiddleware(new Error("User not found"));
+    }
 
     socket.data.user = user;
     socket.data.blockedIds = await getBlockedIds(String(user._id));
+    console.log(`[socket:auth:success] authenticated user=${decoded.internalId.slice(-6)} socketId=${socket.id}`);
     nextMiddleware();
-  } catch (error) {
+  } catch (error: any) {
+    console.error(`[socket:auth:error] Socket authentication failed: ${error.message || error}`);
     nextMiddleware(new Error("Socket authentication failed"));
   }
 });
@@ -470,6 +517,7 @@ io.use(async (socket, nextMiddleware) => {
 io.on("connection", async (baseSocket) => {
   const socket = baseSocket as AuthedSocket;
   const userId = String(socket.data.user._id);
+  console.log(`[socket:connection] user=${userId.slice(-6)} socketId=${socket.id}`);
 
   addUserSocket(userId, socket.id);
   socket.emit("session:ready", { user: toPublicUser(socket.data.user) });
