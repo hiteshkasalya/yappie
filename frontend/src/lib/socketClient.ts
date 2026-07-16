@@ -19,7 +19,12 @@ export function getSocket(session: StoredSession) {
       userId: session.user.id,
       token: session.token
     },
-    transports: ["polling", "websocket"]
+    transports: ["websocket", "polling"],
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 500,
+    reconnectionDelayMax: 3000,
+    timeout: 10000
   });
 
   return socket;

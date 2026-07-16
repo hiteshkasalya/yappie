@@ -510,7 +510,20 @@ export function YappieChatDashboard({
     socket.on("friend:request:received", handleFriendRequestReceived);
     socket.on("friend:request:accepted", handleFriendRequestAccepted);
 
-    socket.emit("match:start", { mode });
+    // Re-emit match:start if socket reconnects (e.g., after brief network blip or ws upgrade)
+    const handleReconnect = () => {
+      socket.emit("match:start", { mode });
+    };
+    socket.on("connect", handleReconnect);
+
+    // Emit immediately (socket may already be connected)
+    if (socket.connected) {
+      socket.emit("match:start", { mode });
+    } else {
+      // Will be emitted by handleReconnect when connect fires
+      setMatchState("waiting");
+      setStatusText(waitingCopy(mode));
+    }
     setMatchState("waiting");
     setStatusText(waitingCopy(mode));
 
@@ -523,6 +536,7 @@ export function YappieChatDashboard({
       socket.off("chat:error", handleError);
       socket.off("friend:request:received", handleFriendRequestReceived);
       socket.off("friend:request:accepted", handleFriendRequestAccepted);
+      socket.off("connect", handleReconnect);
       socket.emit("match:next");
     };
   }, [activeTarget, session, waitingCopy, loadFriends, playChatSound]);

@@ -85,6 +85,25 @@ function removeFromQueues(userId: string) {
   }
 }
 
+// Remove entries from queues whose sockets are no longer connected (stale entries)
+function purgeStaleQueueEntries(io: Server) {
+  for (const user of waitingRandom) {
+    if (!io.sockets.sockets.has(user.socketId)) {
+      waitingRandom.delete(user);
+    }
+  }
+  for (const [college, queue] of waitingCampus) {
+    for (const user of queue) {
+      if (!io.sockets.sockets.has(user.socketId)) {
+        queue.delete(user);
+      }
+    }
+    if (queue.size === 0) {
+      waitingCampus.delete(college);
+    }
+  }
+}
+
 async function getBlockedIds(userId: string) {
   const blocks = await Block.find({
     $or: [{ blockerId: userId }, { blockedUserId: userId }]
@@ -92,22 +111,23 @@ async function getBlockedIds(userId: string) {
   return new Set(blocks.flatMap((b: any) => [String(b.blockerId), String(b.blockedUserId)]));
 }
 
-function findMatch(user: WaitingUser, queue: Set<WaitingUser>) {
+function findMatch(io: Server, user: WaitingUser, queue: Set<WaitingUser>) {
   if (queue.size === 0) return null;
   for (const candidate of queue) {
+    // Skip same user
     if (user.userId === candidate.userId) continue;
+    // Skip blocked users
     if (user.blockedIds.has(candidate.userId)) continue;
     if (candidate.blockedIds.has(user.userId)) continue;
+    // Skip previously skipped peers
     const userSkipped = user.skippedPeers || [];
     const candidateSkipped = candidate.skippedPeers || [];
     if (userSkipped.includes(candidate.userId) || candidateSkipped.includes(user.userId)) continue;
-    queue.delete(candidate);
-    return candidate;
-  }
-  for (const candidate of queue) {
-    if (user.userId === candidate.userId) continue;
-    if (user.blockedIds.has(candidate.userId)) continue;
-    if (candidate.blockedIds.has(user.userId)) continue;
+    // Skip stale sockets (disconnected without cleanup)
+    if (!io.sockets.sockets.has(candidate.socketId)) {
+      queue.delete(candidate);
+      continue;
+    }
     queue.delete(candidate);
     return candidate;
   }
@@ -453,13 +473,16 @@ io.on("connection", async (baseSocket) => {
         blockedIds: socket.data.blockedIds
       };
 
+      // Purge stale disconnected entries before matching
+      purgeStaleQueueEntries(io);
+
       let queue = mode === "random" ? waitingRandom : waitingCampus.get(waitingUser.college);
       if (!queue) {
         queue = new Set();
         if (mode === "campus") waitingCampus.set(waitingUser.college, queue);
       }
       
-      const candidate = findMatch(waitingUser, queue);
+      const candidate = findMatch(io, waitingUser, queue);
 
       if (!candidate) {
         queue.add(waitingUser);
@@ -475,8 +498,12 @@ io.on("connection", async (baseSocket) => {
       const currentUser = await getPublicUser(userId);
 
       if (!candidateSocket || !peer || !currentUser) {
-        socket.emit("match:waiting", { mode, message: "Looking for someone online..." });
+        // Candidate socket disappeared between findMatch and here — put current user in queue
         queue.add(waitingUser);
+        socket.emit("match:waiting", {
+          mode,
+          message: mode === "campus" ? "No one from your college is online right now." : "Looking for a stranger..."
+        });
         return;
       }
 
@@ -618,15 +645,23 @@ io.on("connection", async (baseSocket) => {
 
   socket.on("disconnect", () => {
     removeUserSocket(userId, socket.id);
+    // Short grace period for quick reconnects (e.g., WebSocket upgrade)
     setTimeout(() => {
       const sockets = socketsByUserId.get(userId);
       if (!sockets || sockets.size === 0) {
         leaveActiveRoom(io, socket, true);
         removeFromQueues(userId);
       }
-    }, 5000);
+      // Also purge any other stale queue entries
+      purgeStaleQueueEntries(io);
+    }, 1000);
   });
 });
+
+// Periodic stale-socket purge (catches any zombies missed by disconnect handlers)
+setInterval(() => {
+  purgeStaleQueueEntries(io);
+}, 30 * 1000);
 
 setInterval(() => {
   const url = process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${port}`;
